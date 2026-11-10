@@ -1,5 +1,7 @@
 # Render release runbook
 
+Published status: see [DEPLOYED.md](DEPLOYED.md). The steps below also describe future paired releases.
+
 ## Prepared release
 
 The existing repository and hosting remain the deployment target. No key is tracked. The reviewed release lives on `career-dna-release`. Preparing or pushing this branch does not deploy it to the existing `main` frontend or `ai-experience` API service.

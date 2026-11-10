@@ -1,5 +1,7 @@
 # Career DNA release verification
 
+Publication and post-deployment hotfix results are recorded separately in [DEPLOYED.md](DEPLOYED.md).
+
 Executed against the existing project's `career-dna-release` implementation. This is a prepared release, not a claim that the production URL has been updated.
 
 ## Automated checks

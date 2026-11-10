@@ -66,6 +66,6 @@ This exercises profession specificity, Mandarin-to-English output, an actual bro
 
 ## Release
 
-See [Render deployment](docs/RENDER.md), [limitations](docs/LIMITATIONS.md), and [verification](docs/VERIFICATION.md). This release is prepared on `career-dna-release`; the live site is not changed by preparing that branch.
+See [Render deployment](docs/RENDER.md), [limitations](docs/LIMITATIONS.md), and [verification](docs/VERIFICATION.md). PR #1 is merged and this release is published on the existing services. See [deployment verification](docs/DEPLOYED.md) for the deployed commits, production checks and export-review hotfix.
 
 The older `server.py`, `public/`, `test_server.py` and `launch.py` preserve the earlier optional SQLite research dashboard. They are excluded from the current app's HTTP routes and deployment artifacts. No research database is created by this version.
