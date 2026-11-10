@@ -62,3 +62,7 @@ python -m unittest -v
 ## Render 部署准备
 
 新增 Dockerfile、.dockerignore 和 render.yaml，适配现有 Python 服务。Render 连接前没有创建托管服务、产生部署或配置付费资源。Blueprint 使用 starter 与 1GB 持久磁盘，正式创建前需核对平台报价。数据库必须在持久磁盘 /data 中；不能用随部署清空的临时文件系统。后台密码由 Render 生成，只在平台环境变量设置中查看和管理，勿粘贴到公开代码或聊天中。公开首页为域名根路径，后台为 /admin。发布前仍需浏览器端验收并补充实际研究联系渠道。
+
+## 免费体验版
+
+`preview/index.html` 是不连接后台的独立体验版，可通过 Render Static Site 免费额度发布。只发布 preview 目录，不发布后台页面。支持本地文字/简历解析、关键词建议、编辑、PNG和JSON下载，不包含服务端提交、数据库、账号或AI接口。Render 的带宽和构建时间有免费额度限制。

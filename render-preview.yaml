@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: product-dna-studio-preview
+    runtime: static
+    buildCommand: mkdir -p preview-dist && cp preview/index.html preview-dist/index.html
+    staticPublishPath: preview-dist
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
