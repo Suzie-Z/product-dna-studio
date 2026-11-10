@@ -1,0 +1,16 @@
+# Free compute. OpenAI API usage is billed separately by OpenAI.
+services:
+  - type: web
+    name: product-dna-studio-ai
+    runtime: python
+    plan: free
+    buildCommand: python -m compileall -q ai_server.py
+    startCommand: python ai_server.py
+    healthCheckPath: /health
+    envVars:
+      - key: OPENAI_MODEL
+        value: gpt-5-mini
+      - key: DAILY_GENERATION_LIMIT
+        value: "10"
+      - key: OPENAI_API_KEY
+        sync: false
