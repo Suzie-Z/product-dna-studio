@@ -1,0 +1,19 @@
+# Paid persistent disk is required to retain participant records across deploys.
+# Review the hosting plan and estimated charges in Render before provisioning.
+services:
+  - type: web
+    name: product-dna-studio
+    runtime: docker
+    plan: 0.5c-512mb
+    healthCheckPath: /
+    envVars:
+      - key: DNA_ADMIN_PASSWORD
+        generateValue: true
+      - key: DNA_COOKIE_SECURE
+        value: "1"
+      - key: DNA_DATA_DIR
+        value: /data
+    disk:
+      name: product-dna-data
+      mountPath: /data
+      sizeGB: 1
