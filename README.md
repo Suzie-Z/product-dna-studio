@@ -5,7 +5,7 @@ An English-only experience-to-infographic studio, with a stateless OpenAI API ba
 ## Current experience
 
 1. Click **Create your DNA**.
-2. **Share your experience** using text, a CV (PDF/DOCX/TXT, max 5 MB), or browser voice transcription. Successful uploads show a check, failed uploads a red cross with a retry button. Extracted text remains editable.
+2. **Share your experience** using text, a CV (PDF/DOCX/TXT, max 5 MB), or browser voice transcription. Successful uploads show a check, failed uploads a red cross with a retry button. One CV is kept as a removable attachment, with a green Ready state and a Clear action. Clearing it preserves typed and voice notes. A second CV is rejected until the first is cleared.
 3. **Generate my Product DNA** calls the server-side OpenAI Responses API. Loading, provider errors and retry states are visible. There is no keyword fallback or fabricated demo result.
 4. The output shows 1–4 evidence-based journey stations and 2–4 strengths in a high-resolution infographic, with a neutral walking explorer character. English labels, short summaries, fit-to-box rendering and verified source quotes support readability and grounding.
 5. **Save image** exports a 2000×1400 PNG. **Edit & regenerate** returns to the original input; changing input hides the outdated result. There is no separate manual card editor.
@@ -42,7 +42,7 @@ When the key is missing, the backend remains healthy but generation returns an e
 ## Trial controls and privacy
 
 - This app does not persist CV text, voice transcripts, generated results or visitor profiles. They live in the browser and request memory. Refreshing loses the draft and image.
-- Browser speech recognition retains the spoken language. A voice-language selector controls recognition where supported; the model translates the output into English. Voice support and transcription quality depend on the browser and its speech provider.
+- Browser speech recognition retains the spoken language. Recognition uses the browser language; the model translates the output into English. Voice support and transcription quality depend on the browser and its speech provider.
 - PDF/DOCX parsing happens in the browser using CDN libraries. Scanned PDFs need OCR and are rejected if no text is readable. PDFs are limited to 15 pages. Input is limited to 16,000 characters.
 - The API validates output structure, field lengths, English display labels and literal evidence quotes. It rejects unsupported/incomplete results; evidence quotes are returned with structured results but not printed in the infographic.
 - `DAILY_GENERATION_LIMIT=10` caps provider requests per running process per Australia/Sydney calendar day, including failed provider requests. **This is a best-effort request cap, not a verified limit of ten unique people. It resets if free compute restarts.** A strict paid-call budget or visitor quota requires durable counters and identity/invites. Set a separate budget in the OpenAI project and monitor usage; do not rely on this in-memory cap alone for cost enforcement.
