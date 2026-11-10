@@ -1,5 +1,6 @@
 *
-!server.py
-!public/
-!public/**
-!launch.py
+!ai_server.py
+!career_ai.py
+!build_preview.py
+!preview/
+!preview/**
