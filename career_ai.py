@@ -133,7 +133,7 @@ def validate_map(data,sources,allow_pending=False):
  return data
 
 def export_strings(data):
- return [data.get('career_signature',''),data.get('superpower','')]+[str(item.get(k)or'')for group in ['journey','strengths']for item in data.get(group,[])for k in ['label','description','date_label']if k in item]
+ return [data.get('career_signature',''),data.get('superpower','')]+[str(item.get(k)or'')for group in ['journey','strengths']for item in data.get(group,[])for k in ['label','description','date_label']if item.get(k)]
 
 def apply_refinement(previous,candidate,paths):
  if not isinstance(paths,list)or len(paths)>100 or len(set(paths))!=len(paths):raise ValueError('invalid change list')

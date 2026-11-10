@@ -111,6 +111,11 @@ class ContractTests(unittest.TestCase):
   with patch('career_ai.moderate'),patch('career_ai.structured',return_value={'english_only':'yes'}):
    with self.assertRaises(app.AppError)as e:app.process_review({'sources':[SOURCE],'map':make_map(),'context_consent':True})
    self.assertEqual(e.exception.code,'review_incomplete')
+ def test_non_displayed_empty_dates_are_not_language_reviewed(self):
+  d=make_map();self.assertNotIn('',app.export_strings(d))
+  with patch('career_ai.moderate'),patch('career_ai.structured',return_value={'english_only':True})as review:
+   out=app.process_review({'sources':[SOURCE],'map':d,'context_consent':True})
+   self.assertTrue(out['reviewed']);self.assertTrue(all(review.call_args.args[0]['export_review']))
  def test_input_validation(self):
   for sources in [[],[SOURCE,SOURCE],[{**SOURCE,'content':'a'*22001}],[{**SOURCE,'source_type':'executable'}]]:
    with self.assertRaises(app.AppError):app.sources_from_request(sources)
