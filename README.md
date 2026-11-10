@@ -29,7 +29,7 @@ node --check preview/studio.js
 node --check preview/poster.js
 ```
 
-Commit both sources and the generated `preview/index.html`. The existing Render static site copies only that bundled HTML to its publish directory. Do not publish the repository root.
+The API service deploys the `ai-experience` branch; the static site deploys `main`. Keep both branches aligned when changing API code. Commit both sources and the generated `preview/index.html`. The existing Render static site copies only that bundled HTML to its publish directory. Do not publish the repository root.
 
 ## AI configuration
 

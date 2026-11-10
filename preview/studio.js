@@ -1,6 +1,6 @@
 'use strict';
 const $=id=>document.getElementById(id);
-const API_ORIGIN=''; // Configured after the free AI service is registered.
+const API_ORIGIN=location.hostname==='product-dna-studio-preview.onrender.com'?'https://product-dna-studio-ai.onrender.com':'';
 let result=null,recognition=null,recording=false,busy=false,reading=false,revision=0,uploadRun=0;
 function showStudio(){ $('studio').classList.remove('hidden');$('step-one').scrollIntoView({behavior:'smooth'});history.replaceState(null,'','#studio') }
 $('begin').onclick=showStudio;$('header-start').onclick=e=>{e.preventDefault();showStudio()};if(location.hash==='#studio')$('studio').classList.remove('hidden');
