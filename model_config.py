@@ -6,7 +6,7 @@ MODEL_LOCK=threading.Lock();_CACHE={'at':0,'ids':set(),'state':'unchecked'}
 PROPOSED=['gpt-6.1-sol','gpt-6-astra','gpt-image-2.6-sunburst']
 def career_model():return MODEL_OVERRIDE.get()or os.environ.get('OPENAI_CAREER_MODEL','').strip()or os.environ.get('OPENAI_MODEL','').strip()or'gpt-5-mini'
 def configuration():
- return {'career_model':career_model(),'configuration_source':'OPENAI_CAREER_MODEL'if os.environ.get('OPENAI_CAREER_MODEL','').strip()else'OPENAI_MODEL'if os.environ.get('OPENAI_MODEL','').strip()else'default','image_model':None,'visual_engine':'deterministic SVG with local illustration assets','provider_endpoint':'https://api.openai.com/v1/responses','transport':'Python urllib.request; no OpenAI SDK','reasoning':'medium','provider_store':False}
+ return {'career_model':career_model(),'configuration_source':'OPENAI_CAREER_MODEL'if os.environ.get('OPENAI_CAREER_MODEL','').strip()else'OPENAI_MODEL'if os.environ.get('OPENAI_MODEL','').strip()else'default','image_model':None,'visual_engine':'deterministic SVG with local illustration assets','provider_endpoint':'https://api.openai.com/v1/responses','transport':'Python urllib.request; no OpenAI SDK','reasoning':'medium','provider_store':False,'production_counter_enabled':os.environ.get('PUBLIC_COUNTER_ENV','')=='production'}
 def available_models():
  with MODEL_LOCK:
   if time.monotonic()-_CACHE['at']<300:return _CACHE

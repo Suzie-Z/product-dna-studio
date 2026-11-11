@@ -20,7 +20,8 @@ function tint(hex,white=.85){const rgb=hex.slice(1).match(/../g).map(v=>Math.rou
 function build(data,mobile=false,variant){
  if(data.status!=='ready'||!data.journey.length||data.journey.length>4||!data.strengths.length||data.strengths.length>4)throw Error('A PM map needs 1–4 supported roles and capabilities.');
  const {theme,avatar}=resolveVariant(variant),W=mobile?760:1600,n=data.journey.length,k=data.strengths.length;
- const hasDates=data.journey.some(j=>j.date_label),hasMethods=data.strengths.some(s=>s.methods?.length),journeyY=190,journeyH=mobile?n*280+50:(hasDates?370:330),bridgeY=journeyY+journeyH+12,capY=bridgeY+72,cardH=340,capH=mobile?300+k*(cardH+20):cardH+30,H=capY+capH+(mobile?70:76),islandY=hasDates?451:416;
+ const wideHighlights=mobile&&data.journey.some(j=>(j.highlights||[]).some(h=>[...h.label].reduce((n,ch)=>n+(fonts.body.glyphs[ch]?.advance||0),0)*27/fonts.body.units>400)),rowH=wideHighlights?320:280;
+ const hasDates=data.journey.some(j=>j.date_label),hasMethods=data.strengths.some(s=>s.methods?.length),journeyY=190,journeyH=mobile?n*rowH+50:(hasDates?370:330),bridgeY=journeyY+journeyH+12,capY=bridgeY+72,cardH=340,capH=mobile?300+k*(cardH+20):cardH+30,H=capY+capH+(mobile?70:76),islandY=hasDates?451:416;
  const prefix='pm-world-',parts=[],issues=[],boxes=[],foreground=[];
  if(!fontsLoaded)issues.push('Rounded fonts are not ready.');
  const id=s=>prefix+s,url=s=>'url(#'+id(s)+')';
@@ -48,16 +49,16 @@ function build(data,mobile=false,variant){
   return `<g data-component="JourneyConnection"><path d="${d}" stroke="#ffda7e" stroke-width="17" opacity=".55" fill="none" filter="${url('glow')}"/><path d="${d}" stroke="#ffe69c" stroke-width="8" fill="none"/><path d="${d}" stroke="#fffef3" stroke-width="3" fill="none"/></g>`;
  }
  function role(j,i){
-  const unit=(W-160)/n,x=mobile?485:80+unit*(i+.5),row=mobile?journeyY+25+i*280:0;
+  const unit=(W-160)/n,x=mobile?485:80+unit*(i+.5),row=mobile?journeyY+25+i*rowH:0;
   const preferred=lib.roles.find(r=>r.display_label===j.label)?.preferred_icon_id;
   const symbol=preferred?names[Number(preferred.slice(-2))-1]:j.label==='Growth Hacker'?'growth':j.icon;
   let out=`<g data-component="CareerJourneyIsland">`+icon(symbol,mobile?70:x-40,mobile?row+22:220,mobile?88:64,j.id+':icon');
   out+=fit(j.label,x,mobile?row+55:310,mobile?400:unit-56,mobile?76:48,mobile?34:30,800,2,j.id+':label');
-  if(j.highlights?.length){j.highlights.forEach((h,index)=>{out+=fit(h.label,x,(mobile?row+145:372.5)+(index-(j.highlights.length-1)/2)*(mobile?42:33),mobile?400:unit-64,mobile?38:32,mobile?29:23,500,1,j.id+':highlight'+index)})}
+  if(j.highlights?.length){j.highlights.forEach((h,index)=>{out+=fit(h.label,x,(mobile?row+(wideHighlights?164:145):372.5)+(index-(j.highlights.length-1)/2)*(mobile?(wideHighlights?70:42):33),mobile?400:unit-64,mobile?(wideHighlights?68:38):32,mobile?29:23,500,wideHighlights?2:1,j.id+':highlight'+index)})}
   else out+=fit(j.description,x,mobile?row+150:375,mobile?400:unit-64,mobile?108:64,mobile?30:25,500,mobile?3:2,j.id+':description');
-  if(j.date_label)out+=fit(j.date_label,x,mobile?row+230:430,mobile?400:unit-64,mobile?36:26,mobile?30:20,500,1,j.id+':date');
-  out+=crop('world',[i*256,32,256,211],mobile?50:x-136,mobile?row+135:islandY,mobile?130:250,mobile?105:90,j.id+':island');
-  if(data.journey_type==='chronological'&&i<n-1){const xx=mobile?112:x+unit/2,yy=mobile?row+265:372;out+=`<path d="${mobile?`m${xx-8} ${yy-7} 8 8 8-8`:`m${xx-7} ${yy-10} 10 10-10 10`}" fill="none" stroke="${theme.primary}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`}
+  if(j.date_label)out+=fit(j.date_label,x,mobile?row+(wideHighlights?267:230):430,mobile?400:unit-64,mobile?36:26,mobile?30:20,500,1,j.id+':date');
+  out+=crop('world',[i*256,32,256,211],mobile?50:x-136,mobile?row+(wideHighlights?145:135):islandY,mobile?130:250,mobile?105:90,j.id+':island');
+  if(data.journey_type==='chronological'&&i<n-1){const xx=mobile?112:x+unit/2,yy=mobile?row+rowH-15:372;out+=`<path d="${mobile?`m${xx-8} ${yy-7} 8 8 8-8`:`m${xx-7} ${yy-10} 10 10-10 10`}" fill="none" stroke="${theme.primary}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`}
   if(!mobile)out+=`<path d="M${x} ${journeyY+journeyH-10}Q${x} ${bridgeY+32} ${W/2} ${bridgeY+32}" fill="none" stroke="#ffe8ad" stroke-width="8" opacity=".7" filter="${url('glow')}"/>`;
   return out+'</g>';
  }

@@ -43,6 +43,10 @@ class Architecture(unittest.TestCase):
   r='req_pending_0123456789';self.assertEqual(request_state.begin(r,{'sources':[SOURCE]})[0],'new');self.assertEqual(request_state.begin(r,{'sources':[SOURCE]})[0],'pending');request_state.finish(r,{'map':make_map(1,1)});self.assertEqual(request_state.begin(r,{'sources':[SOURCE]})[0],'replay')
   with patch('request_state.time.monotonic',return_value=request_state.CACHE[r]['expires']+1):self.assertEqual(request_state.begin('req_next_01234567890123',{})[0],'new')
   self.assertNotIn(r,request_state.CACHE)
+ def test_cost_estimate_includes_new_model_cache_write_charges(self):
+  from tools.benchmark_pm_models import estimated_cost
+  sample=[{'model':'gpt-6.1-sol','usage':{'input_tokens':3000,'input_tokens_details':{'cached_tokens':1000,'cache_write_tokens':1000},'output_tokens':500}}]
+  self.assertEqual(estimated_cost(sample),.0096)
  def test_model_priority_and_private_diagnostics(self):
   self.assertEqual(model_config.career_model(),'legacy-model')
   with patch.dict(os.environ,{'OPENAI_CAREER_MODEL':'separate-career-model','OPENAI_API_KEY':'never-print-this-secret'}):

@@ -123,6 +123,17 @@ class CompleteFlow(unittest.TestCase):
       metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[d,mobile]);self.assertTrue(metrics['ok'],(j,k,count,mobile,metrics['issues']));self.assertEqual(metrics['collisions'],[])
       if not mobile:self.assertLessEqual(metrics['height'],1100)
   context.close()
+ def test_real_benchmark_highlight_wraps_without_shrinking_or_overlap(self):
+  page,context=self.page()
+  for j in range(1,5):
+   for k in range(1,5):
+    d=make_map(j,k);d['journey'][0]['highlights'][0]['label']='Discovery and workflow mapping'
+    for dated in [False,True]:
+     if dated:
+      d['journey_type']='chronological'
+      for item in d['journey']:item['date_label']='2020–2022'
+     metrics=page.evaluate('(d)=>buildDNAScene(d,true).metrics',d);self.assertTrue(metrics['ok'],metrics['issues']);self.assertEqual(metrics['collisions'],[]);self.assertTrue(all(b['size']>=27 for b in metrics['boxes']if b['text']=='Discovery and workflow mapping'))
+  context.close()
  def test_actual_painted_foreground_bounds_do_not_overlap(self):
   page,context=self.page();d=make_map(4,4);d['journey_type']='chronological'
   for item in d['journey']:item['date_label']='2020–2022'
