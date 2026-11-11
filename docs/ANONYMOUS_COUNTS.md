@@ -1,4 +1,6 @@
-# Free persistent generation count — prepared for review
+# Free persistent generation count
+
+Live status observed on 11 November 2026 (Australia/Sydney): the reviewed Blueprint has already been applied, the existing API reports `scope: persistent`, and its count survived this release deployment. This update provisions no new database or compute. The preparation notes below document the reviewed design.
 
 The pilot observation goal is 20 completed maps per day. This does not change the existing daily AI provider-attempt limit of 10, the trial start date, or any paid plan. A provider attempt and a completed map are different measures; repairs also consume the provider budget.
 

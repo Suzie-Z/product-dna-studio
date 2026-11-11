@@ -15,3 +15,5 @@ Validation: 42 automated tests, including all 32 independent desktop/mobile 1–
 Repair feedback now names the exact English-copy field when validation fails, rather than a generic language error. If both bounded attempts fail, the API supplies only a safe rule/field diagnostic, never submitted text or model copy. The page preserves the input and shows the existing short retry message. No content logging was introduced.
 
 Generation now uses a per-request citation schema whose allowed alternatives pair each exact source excerpt with its real source ID. Bounded excerpts are distributed across the source, then selected by the model; citations cannot be freely rewritten or attached to another source under constrained decoding. The existing independent literal-quote, reference and safety checks still run afterward.
+
+A real mixed-source regeneration exposed a quote assigned to the wrong source. The citation-schema change addresses that decoding failure directly; it does not relax literal-evidence validation, fabricate a substitute quote, or silently fill slots. Browser verification is rerun against the deployed API after the repair.
