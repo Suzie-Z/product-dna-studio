@@ -1,3 +1,20 @@
+# Reference-quality PM identity map — published 11 November 2026 (Australia/Sydney)
+
+https://product-dna-studio-preview.onrender.com
+
+- Runtime commit `b663c1f4bb631b74573d4c1859199a21ae3f8dfe` is live on both services: API deploy `dep-dbq3one7bikc73bv8sf0`, static deploy `dep-dbq3op8n74is739ktm40`. Served HTML matches the tested bundle exactly.
+- [Delivery acceptance standard](PM_DNA_DELIVERY_STANDARD.md) defines challenge/differentiation, professional judgement, specific practices, evidence, rounded type and sample fidelity. Promotional samples must be actual downloads from this app. The runtime [editorial skill](../skills/pm-dna-editorial/SKILL.md) incorporates these requirements.
+- New generations show one or two source-backed highlights per role. The compact role/highlights/date/island grouping replaces detached generic descriptions. Capability cards present Title Case strengths, judgement sentences and zero to three concrete practices; richly evidenced test profiles produced two or three per card. Sparse evidence remains sparse rather than being padded.
+- Locally bundled Fredoka headings and Nunito body type replace Arial in the map. PNG exports use exact matching glyph outlines, avoiding image-font fallback. On-page SVG text remains selectable; one landscape output and one PNG remain. PNG dimensions are 3200×2100 without dates, 3200×2180 with dates.
+- 61 automated tests passed, including highlight provenance and bounds, generic-practice rejection, font/glyph advance matching, outlined export, multilingual and old-map compatibility, real painted bounds in both layouts, cardinality/method-count combinations, CV/voice input, variants, generation/download and aggregate counts.
+- Complete production browser flow passed with real OpenAI calls and synthetic rich PM experience: non-PM clarification without count → multilingual CV → English map → one PNG → Chinese requirements in original input → regeneration → phone layout. Both ready maps had two highlights for every supported role, two or three complementary practices per capability, and a concrete AI decision lens. Both desktop/mobile had one result, zero DOM export canvases, no foreground collisions, no horizontal mobile overflow or browser errors/local storage. Download retained variant and did not increment counts.
+- Actual AI card: `AI Product Judgement` → `Judge model boundaries and de-risk product fit before rollout.` → `Model capability review`, `Golden-set evaluation`, `Failure analysis`. Platform card: `Balance reusable capabilities with reliability and extensibility.` with `Product contracts` / `System design reviews`. These are observations from the synthetic test input, not guaranteed claims about every visitor.
+- Medium reasoning now supports the editorial generation in the same existing provider call; this can increase latency/token consumption. Existing model, server-side credentials, daily attempt quota, pilot date, free hosting and numeric-only persistent count are unchanged. No user content storage or extra editorial/image-model call was added. Test generations are included in totals.
+
+Local synthetic verification: `/workspace/work/pm-reference-live/report.json`, `first-map.json`, `regenerated-map.json`, downloaded PNG and desktop/mobile screenshots. The PNG itself was visually reviewed for rounded typography, content density and hierarchy. These artifacts were not published as the owner's personal career claims.
+
+---
+
 # Compact, deeper PM DNA — published 11 November 2026 (Australia/Sydney)
 
 https://product-dna-studio-preview.onrender.com
