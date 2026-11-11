@@ -139,9 +139,20 @@ def validate_map(data,sources,allow_pending=False):
     item['order']=i+1
     if data['journey_type']=='experience_areas':item['date_label']=None
     if item['date_label']is not None:
-     english_field(item['date_label'],24,path+'/date_label')
-     years=re.findall(r'\b(?:19|20)\d{2}\b',item['date_label'])
-     if not years or any(year not in source_text for year in years):raise ValueError('invented date')
+     # Optional date captions have their own grammar. Never run year ranges
+     # through contact/rating heuristics, and never show unverified free text.
+     raw=item['date_label'].strip()
+     match=re.fullmatch(r'((?:19|20)\d{2})(?:\s*(?:-|–|—|/|to)\s*((?:19|20)\d{2}|Present|Current))?',raw,re.I)
+     years=re.findall(r'\b(?:19|20)\d{2}\b',raw)
+     known=bool(match)and all(year in set(re.findall(r'\b(?:19|20)\d{2}\b',source_text))for year in years)
+     end=match.group(2)if match else None
+     if match and end:
+      start=match.group(1)
+      token=re.escape(end)if end.isdigit()else r'(?:present|current|now|至今|目前)'
+      # Two individually present years do not prove a continuous interval.
+      if not re.search(r'\b'+start+r'\s*(?:-|–|—|/|to)\s*'+token+r'(?!\w)',source_text,re.I):known=False
+      if end.isdigit()and int(end)<int(start):known=False
+     item['date_label']=(match.group(1)+('–'+('Present'if not end.isdigit()else end)if end else''))if known else None
    elif not set(item['journey_ids'])<=set(journey_ids):raise ValueError('invalid journey link')
  if not has_pm_context(sources):return clarification('Which PM roles or product ownership responsibilities support this map?')
  if CREDENTIAL.search(' '.join(export_strings(data)))and not has_credential_evidence(sources):

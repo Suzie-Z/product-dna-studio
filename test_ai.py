@@ -72,6 +72,11 @@ class ContractTests(unittest.TestCase):
   source=app.sources_from_request([{**SOURCE,'content':'2018-2020: I tested interfaces.\nEmail: me@example.com\nPhone: 0412 345 678\nAddress: 12 Private Street'}])[0]
   self.assertIn('2018-2020',source['content']);self.assertNotIn('example.com',source['content']);self.assertNotIn('0412',source['content']);self.assertNotIn('Private Street',source['content'])
   d=make_map(1,1);d['journey_type']='chronological';d['journey'][0]['date_label']='2018–2020';app.validate_map(d,[{**SOURCE,'content':SOURCE['content']+' I worked during 2018-2020.'}])
+ def test_optional_date_captions_are_canonical_verified_years_only(self):
+  source={**SOURCE,'content':SOURCE['content']+' 2018-2020: Growth PM. 2022-Present: Platform PM.'}
+  for label,expected in [('2018-2020','2018–2020'),('2018 / 2020','2018–2020'),('2022-Present','2022–Present'),('2018-2020 /',None),('2018-2020-2022',None),('2018-2022',None),('2040-2042',None),('call 0412345678',None),('2018/100',None)]:
+   d=make_map(1,1);d['journey_type']='chronological';d['journey'][0]['date_label']=label
+   out=app.validate_map(d,[source]);self.assertEqual(out['status'],'ready');self.assertEqual(out['journey'][0]['date_label'],expected,label)
  def test_unknown_chronology_is_theme_not_fake_timeline(self):
   d=make_map();d['journey_type']='chronological';d['journey'][0]['date_label']='2025';out=app.validate_map(d,[SOURCE]);self.assertEqual(out['journey_type'],'experience_areas');self.assertIsNone(out['journey'][0]['date_label'])
  def test_unknown_icon_falls_back(self):
