@@ -60,7 +60,10 @@ class Handler(BaseHTTPRequestHandler):
      stats=generation_stats(increment=True);result['stats']=stats;result['generation_number']=stats['total_generations']
     except Exception:result['stats_unavailable']=True
    return self.reply(200,result)
-  except AppError as e:return self.reply(e.status,{'error':e.message,'code':e.code})
+  except AppError as e:
+   failure={'error':e.message,'code':e.code}
+   if getattr(e,'validation_issue',None):failure['validation_issue']=e.validation_issue
+   return self.reply(e.status,failure)
   except (ValueError,TypeError,AttributeError,KeyError):return self.reply(400,{'error':'This request could not be read. Check your sources and try again.','code':'invalid_request'})
   except (BrokenPipeError,ConnectionResetError):return
   except Exception:return self.reply(500,{'error':'Something went wrong. Please try again later.','code':'internal_error'})

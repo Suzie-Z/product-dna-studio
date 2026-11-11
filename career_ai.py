@@ -59,6 +59,10 @@ def normalized(s):
  s=re.sub(r'(?<=\w)-\s+(?=\w)','-',s)
  return re.sub(r'\s+',' ',s).casefold().strip().strip('"\'')
 
+def english_field(s,limit,path,empty=False):
+ try:return english(s,limit,empty)
+ except ValueError as error:raise ValueError(path+': '+str(error))from None
+
 def english(s,limit,empty=False):
  if not isinstance(s,str) or len(s)>limit or (not empty and not s.strip()):raise ValueError('text bounds')
  if re.search(r'[<>\x00-\x08]|[-–—/]$',s.strip()) or any('@' in m.group() or re.match(r'(?:https?://|www\.)',m.group(),re.I) or len(re.sub(r'\D','',m.group()))>=9 for m in CONTACT.finditer(s)) or SENSITIVE_CLAIM.search(s) or re.search(r'\d+\s*(?:%|/10|/100)',s):raise ValueError('unsafe display text')
@@ -97,13 +101,13 @@ def validate_map(data,sources,allow_pending=False):
   for item in data.get(field,[]) if isinstance(data,dict) else []:
    if isinstance(item,dict) and item.get('icon') not in ICONS:item['icon']='spark'
  schema_validate(data,SCHEMA)
- for warning in data['warnings']:english(warning,200)
+ for i,warning in enumerate(data['warnings']):english_field(warning,200,'/warnings/'+str(i))
  if data['status']=='needs_more_info':
-  english(data['clarification_question'],220)
+  english_field(data['clarification_question'],220,'/clarification_question')
   if data['journey'] or data['strengths'] or data['career_signature'] or data['superpower']:raise ValueError('clarification is not a final map')
   return data
  if data['clarification_question']is not None or not 1<=len(data['journey'])<=4 or not 1<=len(data['strengths'])<=4:raise ValueError('ready bounds')
- english(data['career_signature'],65);english(data['superpower'],100)
+ english_field(data['career_signature'],65,'/career_signature');english_field(data['superpower'],100,'/superpower')
  if not 2<=len(data['career_signature'].split())<=7:raise ValueError('/career_signature: use 2-7 complete English words')
  if not 3<=len(data['superpower'].split())<=12:raise ValueError('/superpower: use 3-12 complete English words; aim for 5-12 without padding')
  source_index={s['source_id']:s for s in sources}
@@ -116,8 +120,9 @@ def validate_map(data,sources,allow_pending=False):
   if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]{0,23}',ident):raise ValueError('invalid item ID')
  for group in ['journey','strengths']:
   for i,item in enumerate(data[group]):
-   english(item['label'],36 if group=='journey' else 35);english(item['description'],80 if group=='journey' else 95);english(item['evidence_note'],220)
-   if len(item['description'].split())>12:raise ValueError('description word bounds')
+   path='/'+group+'/'+str(i)
+   english_field(item['label'],36 if group=='journey' else 35,path+'/label');english_field(item['description'],80 if group=='journey' else 95,path+'/description');english_field(item['evidence_note'],220,path+'/evidence_note')
+   if len(item['description'].split())>12:raise ValueError(path+'/description: use at most 12 words')
    refs=item['evidence_refs']
    if len(set(refs))!=len(refs) or not set(refs)<=set(source_index):raise ValueError('unknown evidence reference')
    quote_refs=set()
@@ -129,7 +134,7 @@ def validate_map(data,sources,allow_pending=False):
     item['order']=i+1
     if data['journey_type']=='experience_areas':item['date_label']=None
     if item['date_label']is not None:
-     english(item['date_label'],24)
+     english_field(item['date_label'],24,path+'/date_label')
      years=re.findall(r'\b(?:19|20)\d{2}\b',item['date_label'])
      if not years or any(year not in source_text for year in years):raise ValueError('invented date')
    elif not set(item['journey_ids'])<=set(journey_ids):raise ValueError('invalid journey link')
@@ -217,6 +222,7 @@ def process_generate(body):
  moderate('\n'.join(s['content']for s in sources))
  payload={'sources':sources,'clarification_context':clean_source(context)}
  # At most one schema/evidence repair. Each attempt consumes a quota slot.
+ last_issue=''
  for attempt in range(2):
   response=structured(payload,SCHEMA,PROMPT)
   try:
@@ -224,9 +230,12 @@ def process_generate(body):
    if result['status']=='ready':moderate('\n'.join(export_strings(result)))
    return {'map':result,'change_summary':'Your first draft is ready.'if result['status']=='ready'else'One more detail will help.','accepted_source':None}
   except ValueError as error:
+   last_issue=str(error)[:220]
    payload['validation_feedback']={'issue':str(error)[:220],'instruction':'Repair only the invalid parts of previous_draft. Copy source evidence exactly; rephrase overlong display copy as complete short English. Do not invent facts.'}
    payload['previous_draft']=response
- raise AppError(502,'We couldn’t verify this AI draft. Your experience is still here—please try generating again.','ungrounded_result')
+ failure=AppError(502,'We couldn’t verify this AI draft. Your experience is still here—please try generating again.','ungrounded_result')
+ failure.validation_issue=last_issue # Safe rule/field path only, no submitted text or model copy.
+ raise failure
 
 def process_refine(body):
  if body.get('context_consent')is not True:raise AppError(400,'Allow your experience to be resent before updating your map.','consent_required')
