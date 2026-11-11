@@ -30,4 +30,4 @@ Sol’s five cases took18–28 seconds (median about23 seconds) and cost approxi
 
 Official references retrieved and read: [Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [Astra](https://developers.openai.com/api/docs/models/gpt-6-astra), [pricing](https://developers.openai.com/api/docs/pricing), [cache pricing](https://developers.openai.com/api/docs/guides/prompt-caching), [provider retention](https://developers.openai.com/api/docs/guides/your-data).
 
-Local raw synthetic responses/token metrics: `/workspace/work/pm-model-benchmark/`. The single long mobile role-highlight phrase found in Astra output is covered by an adaptive two-line layout regression. Live layout and browser-flow results are recorded in DEPLOYED.md after final rollout.
+Local raw synthetic responses/token metrics: `/workspace/work/pm-model-benchmark/`. The single long mobile role-highlight phrase found in Astra output is covered by an adaptive two-line layout regression. All seven outputs passed live desktop/mobile renderer checks; the completed browser flow and final Spanish-only CV/retry verification are recorded in DEPLOYED.md.

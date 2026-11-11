@@ -2,9 +2,17 @@
 
 Published status: see [DEPLOYED.md](DEPLOYED.md). The steps below also describe future paired releases.
 
-## Prepared release
+## Current release sources and configuration
 
-The existing repository and hosting remain the deployment target. No key is tracked. The reviewed release lives on `career-dna-release`. Preparing or pushing this branch does not deploy it to the existing `main` frontend or `ai-experience` API service.
+The working branch is `pm-career-dna-live`, published to existing `main` (static frontend) and `ai-experience` (API) branches. Historical `career-dna-release` notes below are not the current source of truth. No key is tracked. The Blueprint remains paused; this update uses the existing services and merges only targeted environment keys rather than applying infrastructure changes.
+
+- `OPENAI_CAREER_MODEL=gpt-6.1-sol`: dedicated career generation/refinement selection. Existing `OPENAI_MODEL=gpt-5` is retained as a fallback only when the dedicated variable is unset; this is not automatic failover.
+- `PM_INTERNAL_TEST_TOKEN`: server-only generated secret for authenticated production testing/diagnostics. Never put it in the frontend or public docs.
+- `PUBLIC_COUNTER_ENV=production`: set only on the real production API. Local/staging defaults must not count.
+- Existing `OPENAI_API_KEY`, `COUNTER_DATABASE_URL`, daily provider-attempt quota and trial date are preserved.
+- No runtime image-model variable is needed: visuals use SVG/local assets. Configuring an unused `OPENAI_IMAGE_MODEL` does not change this renderer.
+
+Model access/benchmarks: [PM_MODEL_BENCHMARK.md](PM_MODEL_BENCHMARK.md). Counter receipts, legacy-count preservation and session privacy: [CAREER_STUDIO_ARCHITECTURE.md](CAREER_STUDIO_ARCHITECTURE.md).
 
 ### Existing services
 
