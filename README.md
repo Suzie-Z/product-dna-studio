@@ -1,6 +1,6 @@
 # Career DNA Studio
 
-A profession-agnostic, evidence-grounded career map studio. This upgrades the existing illustrated experience in place: lavender/cream/teal surfaces, soft cards, controlled vector icons, and one small gender-neutral explorer.
+A profession-agnostic, evidence-grounded career map studio. This upgrades the existing illustrated experience in place: lavender/cream/teal surfaces, soft cards, controlled vector icons, and one illustrated gender-neutral human chibi.
 
 ## Experience
 
@@ -28,7 +28,7 @@ Open `http://localhost:10000`. The API remains healthy without a key, but model 
 - `career_ai.py`: schema, prompts, source redaction, moderation, grounding and refinement merge.
 - `ai_server.py`: bounded JSON HTTP/CORS boundary and concurrency/rate controls.
 - `preview/studio.template.html`, `studio.css`, `studio.js`: maintainable frontend sources.
-- `preview/poster.js`: one controlled SVG scene with responsive desktop/mobile layouts, selectable text, shaded islands, a neutral toy explorer, and fixed 3200×2008 PNG export. User copy is XML-escaped; overlong text blocks download rather than clipping.
+- `preview/poster.js`: one controlled SVG scene with responsive desktop/mobile layouts, selectable text, illustrated rocky islands, a gender-neutral human chibi, and fixed 3200×2360 PNG export. User copy is XML-escaped; overlong text blocks download rather than clipping.
 - `build_preview.py`: emits a self-contained `preview/index.html`, compatible with the current static host.
 
 Always rebuild the bundled HTML after frontend edits and commit source plus bundle.
@@ -75,3 +75,5 @@ The older `server.py`, `public/`, `test_server.py` and `launch.py` preserve the 
 `GET /api/stats` returns only total/today generation counts and a storage scope. A successful `/generate` response includes `generation_number` and the same count snapshot. Failed and clarification responses, refinements, and exports do not increment it. `generation_counts.py` is deliberately separate from AI/content processing.
 
 The default mode is process memory and is labelled accordingly in the UI. To retain counts across service restarts, review and approve `render-counts.yaml`, which adopts the existing free API service and connects a private free Postgres instance. The table stores only `generation_day` and `generated_count`. No names, sources, CVs, maps or visitor IDs are written. The free database expires after 30 days; export/migrate totals before then. The live API currently reports persistent counting; this release preserves its existing connection without provisioning new resources. The observer goal of 20 generations/day does not change the existing AI call limit.
+
+The latest [reference-fidelity correction](docs/VISUAL_FIDELITY.md) uses a local illustrated atlas, one responsive map root, and read-only View Full Journey. It preserves the original two-band illustrated world without generating two alternatives.

@@ -23,6 +23,12 @@ class ContractTests(unittest.TestCase):
     for quote in props['quote']['enum']:
      self.assertIn(quote,source['content']);self.assertGreaterEqual(len(quote),6);self.assertLessEqual(len(quote),240);total+=1
    self.assertLessEqual(total,180);self.assertEqual(len(options),2)
+ def test_job_families_and_transferable_strengths(self):
+  for label in ['Multimodal Evaluation','Built an LLM pipeline','API Development']:
+   d=make_map();d['journey'][0]['label']=label
+   with self.assertRaisesRegex(ValueError,'professional job-family'):app.validate_map(d,[SOURCE])
+  d=make_map();d['strengths'][0]['label']=d['journey'][0]['label']
+  with self.assertRaisesRegex(ValueError,'transferable capability'):app.validate_map(d,[SOURCE])
  def test_caps_and_single_strength(self):
   self.assertEqual(len(app.validate_map(make_map(1,1),[SOURCE])['strengths']),1)
   for group in ['journey','strengths']:

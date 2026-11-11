@@ -121,6 +121,18 @@ async function renderResult(){
  $('generation-number').classList.toggle('hidden',!generationNumber);$('generation-number').textContent=generationNumber?'Generation #'+generationNumber:'';
  $('result-panel').classList.remove('hidden');$('save-status').textContent='';
  renderDNAMap($('map-visual'),result);
+ $('full-journey').open=false;$('journey-evidence').replaceChildren();
+ for(const [group,heading]of [['journey','Career Journey'],['strengths','Core Capabilities']]){
+  const title=document.createElement('h4');title.textContent=heading;$('journey-evidence').append(title);
+  for(const item of result[group]){
+   const section=document.createElement('section'),h=document.createElement('h5'),note=document.createElement('p');h.textContent=item.label+(item.date_label?' · '+item.date_label:'');note.textContent=item.evidence_note;section.append(h,note);
+   for(const q of item.evidence_quotes){const quote=document.createElement('blockquote');quote.textContent=q.quote;section.append(quote)}
+   $('journey-evidence').append(section);
+  }
+ }
+ const original=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Original experience';original.append(summary);
+ for(const source of sources()){const heading=document.createElement('h5'),content=document.createElement('p');heading.textContent=source.source_label;content.textContent=source.content;content.className='original-context';original.append(heading,content)}
+ $('journey-evidence').append(original);
  try{await renderDNAPoster($('poster'),result)}catch{$('save-status').textContent='The image could not render. Try generating again.'}
 }
 $('save').onclick=async()=>{
