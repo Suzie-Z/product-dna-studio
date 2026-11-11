@@ -35,6 +35,11 @@ class ContractTests(unittest.TestCase):
     response=app.process_generate({'sources':[{**SOURCE,'content':content}]})
    self.assertEqual(response['map']['status'],'needs_more_info',content);provider.assert_not_called()
   self.assertTrue(app.has_pm_context([{**SOURCE,'content':'我是平台产品经理，但没有管理过团队。我负责产品路线图。'}]))
+ def test_pm_ownership_is_evidence_not_aspiration_or_denial(self):
+  for content in ['I owned product requirements for operational workflows.','I was responsible for the product roadmap.','我负责产品需求和优先级制定。']:
+   self.assertTrue(app.has_pm_context([{**SOURCE,'content':content}]),content)
+  for content in ['I have never owned a product roadmap.','I hope to own product requirements one day.','我没有负责产品需求，我只是后端工程师。']:
+   self.assertFalse(app.has_pm_context([{**SOURCE,'content':content}]),content)
  def test_role_schema_excludes_generic_professions(self):
   values=app.SCHEMA['properties']['journey']['items']['properties']['label']['enum']
   self.assertIn('Platform PM',values);self.assertNotIn('Software Engineering',values);self.assertNotIn('Business Consulting',values)

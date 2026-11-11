@@ -17,14 +17,14 @@ function tint(hex,white=.85){const rgb=hex.slice(1).match(/../g).map(v=>Math.rou
 function build(data,mobile=false,variant){
  if(data.status!=='ready'||!data.journey.length||data.journey.length>4||!data.strengths.length||data.strengths.length>4)throw Error('A PM map needs 1–4 supported roles and capabilities.');
  const {theme,avatar}=resolveVariant(variant),W=mobile?760:1600,n=data.journey.length,k=data.strengths.length;
- const journeyY=230,journeyH=mobile?n*300+80:485,bridgeY=journeyY+journeyH+25,capY=bridgeY+85,capH=mobile?330+k*260:335,H=mobile?capY+capH+90:1290;
+ const journeyY=230,journeyH=mobile?n*330+80:485,bridgeY=journeyY+journeyH+25,capY=bridgeY+85,capH=mobile?330+k*300:335,H=mobile?capY+capH+90:1290;
  const prefix='pm-world-',parts=[],issues=[],boxes=[],foreground=[];
  const id=s=>prefix+s,url=s=>'url(#'+id(s)+')';
  function zone(key,x,y,w,h,kind){foreground.push({id:key,x,y,width:w,height:h,kind});return `data-foreground="${esc(key)}"`}
  function rect(x,y,w,h,r,fill,stroke='#ffffffe6',filter='shadow'){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="3"${filter?` filter="${url(filter)}"`:''}/>`}
  function text(s,x,y,size=26,weight=500,color='#171333'){return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${size}" font-weight="${weight}" fill="${color}">${esc(s)}</text>`}
  function fit(s,x,y,w,h,size=26,weight=500,maxLines=3,key=''){
-  let f=size,rows=[];const min=mobile?24:20;
+  let f=size,rows=[];const min=mobile?(key==='signature'?22:30):20;
   for(;f>=min;f--){measure.font=`${weight} ${f}px Arial`;rows=[];let line='';for(const word of String(s).split(/\s+/)){const next=line?line+' '+word:word;if(line&&measure.measureText(next).width>w){rows.push(line);line=word}else line=next}if(line)rows.push(line);if(rows.length<=maxLines&&rows.length*f*1.2<=h&&rows.every(r=>measure.measureText(r).width<=w))break}
   if(f<min){issues.push('Text exceeds its reserved area: '+(key||'copy'));return text('Regenerate for shorter wording',x,y,min,500,'#77578d')}
   boxes.push({text:String(s),x:x-w/2,y:y-h/2,width:w,height:h,size:f,lines:rows.length,paintedHeight:rows.length*f*1.2});
@@ -37,32 +37,32 @@ function build(data,mobile=false,variant){
  }
  function icon(name,x,y,size,key){const i=Math.max(0,names.indexOf(aliases[name]||name));return crop('icons',[(i%6)*256+8,Math.floor(i/6)*256+8,240,240],x,y,size,size,key)}
  function decor(name,x,y,w,h){const view=name==='cloud'?[520,1295,222,218]:[774,1286,243,243];return crop('world',view,x,y,w,h)}
- function pill(s,x,y,w){return rect(x,y,w,58,29,url('pill'),'#fff9')+text(s,x+w/2,y+31,mobile?29:31,750,'#fff')}
+ function pill(s,x,y,w){return rect(x,y,w,58,29,url('pill'),'#fff9')+text(s,x+w/2,y+31,31,750,'#fff')}
  function background(){return rect(0,0,W,H,36,url('background'),'none','')+decor('cloud',0,mobile?0:5,mobile?120:300,mobile?40:160)+decor('cloud',W-(mobile?120:300),mobile?0:5,mobile?120:300,mobile?40:160)}
  function connections(){
   const d=mobile?`M112 ${journeyY+200}V${journeyY+journeyH-40}`:`M60 645C260 590 350 650 500 630S750 610 900 642 1200 590 1540 640`;
   return `<g data-component="JourneyConnection"><path d="${d}" stroke="#ffda7e" stroke-width="17" opacity=".55" fill="none" filter="${url('glow')}"/><path d="${d}" stroke="#ffe69c" stroke-width="8" fill="none"/><path d="${d}" stroke="#fffef3" stroke-width="3" fill="none"/></g>`;
  }
  function role(j,i){
-  const unit=(W-160)/n,x=mobile?485:80+unit*(i+.5),row=mobile?journeyY+40+i*300:0;
+  const unit=(W-160)/n,x=mobile?485:80+unit*(i+.5),row=mobile?journeyY+40+i*330:0;
   const preferred=lib.roles.find(r=>r.display_label===j.label)?.preferred_icon_id;
   const symbol=preferred?names[Number(preferred.slice(-2))-1]:j.label==='Growth Hacker'?'growth':j.icon;
   let out=`<g data-component="CareerJourneyIsland">`+icon(symbol,mobile?70:x-40,mobile?row+35:265,mobile?88:80,j.id+':icon');
-  out+=fit(j.label,x,mobile?row+67:397,mobile?400:unit-56,mobile?75:68,mobile?34:30,800,2,j.id+':label');
-  out+=fit(j.description,x,mobile?row+168:476,mobile?400:unit-64,mobile?90:58,mobile?30:25,500,mobile?3:2,j.id+':description');
-  if(j.date_label)out+=fit(j.date_label,x,mobile?row+244:529,mobile?400:unit-64,24,mobile?24:20,500,1,j.id+':date');
-  out+=crop('world',[i*256,32,256,211],mobile?50:x-136,mobile?row+160:553,mobile?130:272,mobile?110:150,j.id+':island');
-  if(data.journey_type==='chronological'&&i<n-1){const xx=mobile?112:x+unit/2,yy=mobile?row+290:477;out+=`<path d="${mobile?`m${xx-8} ${yy-7} 8 8 8-8`:`m${xx-7} ${yy-10} 10 10-10 10`}" fill="none" stroke="${theme.primary}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`}
+  out+=fit(j.label,x,mobile?row+77:397,mobile?400:unit-56,mobile?84:68,mobile?34:30,800,2,j.id+':label');
+  out+=fit(j.description,x,mobile?row+187:476,mobile?400:unit-64,mobile?108:58,mobile?30:25,500,mobile?3:2,j.id+':description');
+  if(j.date_label)out+=fit(j.date_label,x,mobile?row+276:529,mobile?400:unit-64,mobile?36:24,mobile?30:20,500,1,j.id+':date');
+  out+=crop('world',[i*256,32,256,211],mobile?50:x-136,mobile?row+170:553,mobile?130:272,mobile?110:150,j.id+':island');
+  if(data.journey_type==='chronological'&&i<n-1){const xx=mobile?112:x+unit/2,yy=mobile?row+315:477;out+=`<path d="${mobile?`m${xx-8} ${yy-7} 8 8 8-8`:`m${xx-7} ${yy-10} 10 10-10 10`}" fill="none" stroke="${theme.primary}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`}
   if(!mobile)out+=`<path d="M${x} 703Q${x} ${bridgeY+32} ${W/2} ${bridgeY+32}" fill="none" stroke="#ffe8ad" stroke-width="8" opacity=".7" filter="${url('glow')}"/>`;
   return out+'</g>';
  }
  function character(){return `<g data-component="CareerCharacter">${crop('avatars',[(avatar%6)*256,Math.floor(avatar/6)*256,256,256],mobile?30:25,capY+15,mobile?280:300,mobile?280:300,'human-chibi')}</g>`}
  function capability(s,i){
-  const gap=18,available=mobile?680:1215,w=mobile?680:(available-gap*(k-1))/k,x=mobile?40:355+i*(w+gap),y=mobile?capY+330+i*260:capY+15,h=mobile?240:300;
+  const gap=18,available=mobile?680:1215,w=mobile?680:(available-gap*(k-1))/k,x=mobile?40:355+i*(w+gap),y=mobile?capY+330+i*300:capY+15,h=mobile?280:300;
   let out=`<g data-component="CapabilityCard">${rect(x,y,w,h,40,url('card'+i),'#fff','cardShadow')}<rect x="${x+7}" y="${y+7}" width="${w-14}" height="${h-14}" rx="34" fill="none" stroke="#ffffffaa" stroke-width="3"/>`;
-  out+=icon(s.icon,mobile?x+28:x+w/2-35,mobile?y+72:y+5,mobile?90:70,s.id+':icon');
-  out+=fit(s.label,mobile?x+400:x+w/2,mobile?y+62:y+125,mobile?480:w-38,mobile?80:68,mobile?35:29,800,2,s.id+':label');
-  out+=fit(s.description,mobile?x+400:x+w/2,mobile?y+166:y+220,mobile?480:w-42,mobile?96:90,mobile?30:24,500,3,s.id+':description');
+  out+=icon(s.icon,mobile?x+28:x+w/2-35,mobile?y+88:y+5,mobile?90:70,s.id+':icon');
+  out+=fit(s.label,mobile?x+400:x+w/2,mobile?y+65:y+125,mobile?480:w-38,mobile?88:68,mobile?35:29,800,2,s.id+':label');
+  out+=fit(s.description,mobile?x+400:x+w/2,mobile?y+190:y+220,mobile?480:w-42,mobile?120:90,mobile?30:24,500,3,s.id+':description');
   return out+'</g>';
  }
  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" data-world="pm-illustrated-3d" data-theme="${theme.id}" data-avatar="pm_avatar_${String(avatar+1).padStart(2,'0')}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="${id('title')} ${id('desc')}" style="font-family:Arial,sans-serif"><title id="${id('title')}">My PM Career DNA — ${esc(data.career_signature)}</title><desc id="${id('desc')}">${esc(data.superpower)}. One evidence-grounded PM journey and capability map.</desc><defs><image id="${id('world')}" href="${WORLD}" width="1024" height="1536"/><image id="${id('avatars')}" href="${AVATARS}" width="1536" height="1024"/><image id="${id('icons')}" href="${ICONS}" width="1536" height="1024"/>
@@ -77,7 +77,7 @@ function build(data,mobile=false,variant){
  parts.push(rect(10,journeyY,W-20,journeyH,60,url('panel'),'#fff'),connections());data.journey.forEach((j,i)=>parts.push(role(j,i)));
  parts.push(decor('garden',0,journeyY+journeyH-70,mobile?25:90,70),decor('garden',W-(mobile?25:90),journeyY+journeyH-70,mobile?25:90,70),pill('My PM Journey',mobile?30:36,journeyY-30,mobile?330:350));
  parts.push(rect(10,capY,W-20,capH,60,url('panel'),'#fff'),character());
- if(mobile)parts.push(fit(data.superpower,530,capY+145,360,140,29,500,4,'superpower'));
+ if(mobile)parts.push(fit(data.superpower,530,capY+155,360,180,30,500,5,'superpower'));
  data.strengths.forEach((s,i)=>parts.push(capability(s,i)));parts.push(pill('Shape My PM DNA',W/2-240,bridgeY,480));
  if(!mobile)parts.push(fit(data.superpower,W/2,1215,W-180,38,24,500,1,'superpower'));
  parts.push(text('PM Career DNA',W/2,H-24,15,500,'#6a7d88'),'</svg>');

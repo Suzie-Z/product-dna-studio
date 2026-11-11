@@ -96,6 +96,25 @@ class CompleteFlow(unittest.TestCase):
   self.assertEqual(page.locator('#map-visual script').count(),0)
   with self.assertRaises(Exception):page.evaluate('(d)=>buildDNAScene(d)',make_map(5,1))
   context.close()
+ def test_chronological_mobile_dates_have_readable_reserved_height(self):
+  page,context=self.page()
+  for j in range(1,5):
+   for k in range(1,5):
+    d=make_map(j,k);d['journey_type']='chronological'
+    for item in d['journey']:item['date_label']='2020–2022'
+    d['superpower']='Turning funnel evidence and platform contracts into reliable AI features'
+    for mobile in [False,True]:
+     metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[d,mobile]);self.assertTrue(metrics['ok'],metrics['issues']);self.assertEqual(metrics['collisions'],[])
+  context.close()
+ def test_actual_painted_foreground_bounds_do_not_overlap(self):
+  page,context=self.page();d=make_map(4,4);d['journey_type']='chronological'
+  for item in d['journey']:item['date_label']='2020–2022'
+  page.evaluate('(d)=>{renderDNAMap(document.querySelector("#map-visual"),d);document.querySelector("#step-two").classList.remove("hidden");document.querySelector("#result-panel").classList.remove("hidden")}',d)
+  for width in [1440,390]:
+   page.set_viewport_size({'width':width,'height':1000});page.wait_for_function('(mode)=>document.querySelector("#map-visual").dataset.layout===mode',arg='mobile'if width==390 else'desktop')
+   bad=page.evaluate("""()=>{const rect=e=>{if(e.tagName.toLowerCase()!=='svg')return e.getBoundingClientRect();/* SVG getBBox includes the full atlas behind the clipped viewport. Use its actual viewport, transformed to screen coordinates. */const m=e.parentElement.getScreenCTM(),x=e.x.baseVal.value,y=e.y.baseVal.value,w=parseFloat(getComputedStyle(e).width),h=parseFloat(getComputedStyle(e).height),p=new DOMPoint(x,y).matrixTransform(m),q=new DOMPoint(x+w,y+h).matrixTransform(m);return {left:p.x,top:p.y,right:q.x,bottom:q.y}};const a=[...document.querySelectorAll('#map-visual [data-foreground]')].map(e=>({id:e.dataset.foreground,r:rect(e)}));const out=[];for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++){let p=a[i],q=a[j];if(Math.min(p.r.right,q.r.right)-Math.max(p.r.left,q.r.left)>1&&Math.min(p.r.bottom,q.r.bottom)-Math.max(p.r.top,q.r.top)>1)out.push([p.id,q.id])}return out}""")
+   self.assertEqual(bad,[],(width,bad))
+  context.close()
  def test_variant_rotation_and_stable_export(self):
   page,context=self.page()
   values=page.evaluate('Array.from({length:24},()=>nextPMVariant())')

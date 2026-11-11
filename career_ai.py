@@ -263,7 +263,11 @@ def has_pm_context(sources):
     before=sentence[max(0,match.start()-60):match.start()]
     if re.search(r'(?:not|never|no|without|want to (?:be|become)|hope to (?:be|become)|aspire to (?:be|become))\s+(?:\w+\s+){0,5}$|(?:不是|从未做过|没有做过|希望成为|想成为).{0,8}$',before,re.I):continue
     return True
-   if re.search(r'产品路线图|产品优先级|product roadmap|product priorit',sentence,re.I)and re.search(r'owned|own |responsible for|prioriti[sz]ed|负责|制定|决策',sentence,re.I):return True
+   if re.search(r'产品路线图|产品优先级|产品需求|product roadmap|product priorit|product requirements',sentence,re.I):
+    for ownership in re.finditer(r'owned|own\b|responsible for|prioriti[sz]ed|负责|制定|决策',sentence,re.I):
+     before=sentence[max(0,ownership.start()-40):ownership.start()]
+     if re.search(r'(?:not|never|no|want to|hope to|aspire to)\s+(?:\w+\s+){0,4}$|(?:没有|从未|希望|想要).{0,8}$',before,re.I):continue
+     return True
  return False
 
 def process_generate(body):

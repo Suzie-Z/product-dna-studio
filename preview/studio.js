@@ -115,7 +115,7 @@ async function generate(){
  if(data.map.status==='needs_more_info'){
   pendingQuestion=data.map.clarification_question;$('clarification-question').textContent=pendingQuestion;$('clarification').classList.remove('hidden');$('clarification-answer').focus();return;
  }
- result=data.map;renderVariant=nextPMVariant();generationNumber=data.generation_number??null;if(data.stats)showStats(data.stats);else loadStats();pendingQuestion='';$('clarification').classList.add('hidden');await renderResult();updateButtons();event('generation_succeeded');scrollToStep('result-panel');
+ result=data.map;renderVariant=nextPMVariant();generationNumber=data.generation_number??null;if(data.stats)showStats(data.stats);else loadStats();pendingQuestion='';$('clarification').classList.add('hidden');busy=true;updateButtons();try{await renderResult()}finally{busy=false;updateButtons()}event('generation_succeeded');scrollToStep('result-panel');
 }
 $('generate').onclick=generate;
 $('answer').onclick=async()=>{const answer=$('clarification-answer').value.trim();if(!answer){$('clarification-answer').focus();return}corrections.push({source_id:id(),source_type:'typed_story',source_label:'Follow-up answer',content:answer});$('clarification-answer').value='';await generate()};
