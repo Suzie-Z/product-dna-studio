@@ -1,3 +1,20 @@
+# Reference-fidelity illustrated world — 11 November 2026 (Australia/Sydney)
+
+https://product-dna-studio-preview.onrender.com
+
+- Runtime commit `523b99f3dc3cfdc07c962051c52b4d07069335c9` is live on both services. API deploy: `dep-dbptll0ae00c73clk920`; static deploy: `dep-dbptma1srm7s738rkutg`. Served HTML matches the committed bundle exactly.
+- Replaced the previous vector approximation with an actual local 3D illustration library: cheerful gender-neutral human chibi, sculpted rocky floating islands, glossy career symbols, clouds, greenery and flowers. Rebuilt the original two-band illustrated composition with glowing journey/bridge paths and dimensional capability cards. The original My Product DNA reference and full-result screenshots were reviewed side by side; desktop and phone screenshots are in ignored test artifacts.
+- Each generation displays exactly one responsive map root, not desktop/mobile alternatives side by side. One Download button exports one 3200×2360 PNG. Actual illustration pixels survive PNG export. No square/portrait chooser, manual map editor, alternate second image or extra AI image call per visitor was introduced.
+- Added the requested read-only View Full Journey, showing evidence and optional original context in browser memory. It causes no content persistence or API request and does not add another result.
+- Strengthened job-family versus project-activity abstraction and transferable capability generation. Known activity headings and capabilities repeating journey headings receive bounded repair feedback. Evidence-grounded 1–4 independent counts and literal quote/source constraints remain.
+- 43 automated tests passed across backend, parsing, voice fallback, regeneration, source safety, one-result rendering, read-only evidence, all 32 cardinality/layout combinations, counter behavior and PNG download. Production browser verification with real OpenAI calls passed generation, Chinese original-input regeneration, single PNG download, phone layout and evidence disclosure, with no browser errors.
+- Final real synthetic-profile test returned Software Engineering, Platform Engineering and Data Analytics, with Systems & Platform Design, Reliability Analysis and Evaluation Judgement. These are interpretive categories derived from submitted test experience, not independently verified jobs or qualifications.
+- Existing free compute, configured key, persistent aggregate counter, daily call limit and pilot date were retained. No infrastructure resources were created or changed. Total counts include verification generations; downloads do not increment them.
+
+See [visual fidelity implementation](VISUAL_FIDELITY.md).
+
+---
+
 # Simplified illustrated-map update — 11 November 2026 (Australia/Sydney)
 
 https://product-dna-studio-preview.onrender.com

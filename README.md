@@ -1,6 +1,6 @@
 # Career DNA Studio
 
-A profession-agnostic, evidence-grounded career map studio. This upgrades the existing illustrated experience in place: lavender/cream/teal surfaces, soft cards, controlled vector icons, and one illustrated gender-neutral human chibi.
+A profession-agnostic, evidence-grounded career map studio. This upgrades the existing illustrated experience in place: lavender/cream/teal surfaces, soft cards, illustrated professional icons, and one illustrated gender-neutral human chibi.
 
 ## Experience
 
