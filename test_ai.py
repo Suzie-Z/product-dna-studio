@@ -33,6 +33,24 @@ class ContractTests(unittest.TestCase):
   for option in options:
    self.assertEqual(option['properties']['source_id']['enum'],[SOURCE['source_id']])
    for quote in option['properties']['quote']['enum']:self.assertIn(app.normalized(quote),app.normalized(SOURCE['content']))
+ def test_role_highlights_require_associated_verbatim_quotes(self):
+  for quote in [{'source_id':'unknown','quote':SOURCE['content'][:50]},{'source_id':SOURCE['source_id'],'quote':'I invented a global platform transformation.'}]:
+   d=make_map(1,1);d['journey'][0]['highlights'][0]['evidence_quote']=quote
+   with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
+ def test_role_highlights_are_bounded_safe_and_export_reviewed(self):
+  for label in ['用户能力','A'*31,'World-class visionary','x@example.com']:
+   d=make_map(1,1);d['journey'][0]['highlights'][0]['label']=label
+   with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
+  d=app.validate_map(make_map(1,1),[SOURCE]);self.assertIn(d['journey'][0]['highlights'][0]['label'],app.export_strings(d))
+  d['journey'][0]['highlights'].append(copy.deepcopy(d['journey'][0]['highlights'][0]))
+  with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
+ def test_generic_bubble_categories_need_specific_practices(self):
+  for label in ['Productisation','Operational optimisation','Safety capability design']:
+   d=make_map(1,1);d['strengths'][0]['methods'][0]['label']=label
+   with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
+ def test_role_highlights_additive_compatibility_and_generation_bounds(self):
+  d=make_map(1,1);del d['journey'][0]['highlights'];self.assertEqual(app.validate_map(d,[SOURCE])['journey'][0]['highlights'],[])
+  schema=app.generation_schema([SOURCE]);h=schema['properties']['journey']['items']['properties']['highlights'];self.assertEqual((h['minItems'],h['maxItems']),(1,2));self.assertTrue(h['items']['properties']['evidence_quote']['anyOf'])
  def test_all_independent_cardinalities(self):
   for j in range(1,5):
    for k in range(1,5):self.assertEqual(len(app.validate_map(make_map(j,k),[SOURCE])['strengths']),k)
@@ -189,7 +207,7 @@ class ContractTests(unittest.TestCase):
   data=make_map(1,1)
   for item in data['journey']+data['strengths']:
    item['evidence_quotes'][0]['quote']='I evaluated "model fit" across real-world workflows'
-  data['strengths'][0]['methods']=[]
+  data['strengths'][0]['methods']=[];data['journey'][0]['highlights']=[]
   self.assertEqual(app.validate_map(data,[source])['status'],'ready')
   data['strengths'][0]['evidence_quotes'][0]['quote']='I invented an award-winning model'
   with self.assertRaises(ValueError):app.validate_map(data,[source])

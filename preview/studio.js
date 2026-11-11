@@ -123,14 +123,14 @@ async function renderResult(){
  if(!result)return;
  $('generation-number').classList.toggle('hidden',!generationNumber);$('generation-number').textContent=generationNumber?'Generation #'+generationNumber:'';
  $('result-panel').classList.remove('hidden');$('save-status').textContent='';
- renderDNAMap($('map-visual'),result,renderVariant);
+ await window.pmFontsReady;renderDNAMap($('map-visual'),result,renderVariant);
  $('full-journey').open=false;$('journey-evidence').replaceChildren();
  for(const [group,heading]of [['journey','PM Journey'],['strengths','Core Capabilities']]){
   const title=document.createElement('h4');title.textContent=heading;$('journey-evidence').append(title);
   for(const item of result[group]){
    const section=document.createElement('section'),h=document.createElement('h5'),note=document.createElement('p');h.textContent=item.label+(item.date_label?' · '+item.date_label:'');note.textContent=item.evidence_note;section.append(h,note);
    for(const q of item.evidence_quotes){const quote=document.createElement('blockquote');quote.textContent=q.quote;section.append(quote)}
-   for(const method of item.methods||[]){const label=document.createElement('p'),quote=document.createElement('blockquote');label.textContent=method.label;quote.textContent=method.evidence_quote.quote;section.append(label,quote)}
+   for(const method of [...(item.highlights||[]),...(item.methods||[])]){const label=document.createElement('p'),quote=document.createElement('blockquote');label.textContent=method.label;quote.textContent=method.evidence_quote.quote;section.append(label,quote)}
    $('journey-evidence').append(section);
   }
  }

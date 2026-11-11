@@ -27,7 +27,7 @@ def model_transport(path,payload,timeout=90):
   for group in ['journey','strengths']:
    for item in d[group]:
     item.update(evidence_refs=[src['source_id']],evidence_quotes=[{'source_id':src['source_id'],'quote':quote}])
-    for method in item.get('methods',[]):method['evidence_quote']={'source_id':src['source_id'],'quote':quote}
+    for method in item.get('methods',[])+item.get('highlights',[]):method['evidence_quote']={'source_id':src['source_id'],'quote':quote}
   response=d
  return {'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':json.dumps(response)}]}]}
 
@@ -43,7 +43,7 @@ class CompleteFlow(unittest.TestCase):
  def tearDownClass(cls):
   cls.browser.close();cls.p.stop();cls.server.shutdown();cls.server.server_close();cls.provider.stop();cls.env.stop()
  def page(self,width=1440):
-  context=self.browser.new_context(viewport={'width':width,'height':1000});context.route('https://fonts.googleapis.com/**',lambda r:r.abort());context.route('https://fonts.gstatic.com/**',lambda r:r.abort());page=context.new_page();page.goto(self.url);page.locator('#begin').click();return page,context
+  context=self.browser.new_context(viewport={'width':width,'height':1000});context.route('https://fonts.googleapis.com/**',lambda r:r.abort());context.route('https://fonts.gstatic.com/**',lambda r:r.abort());page=context.new_page();page.goto(self.url);page.evaluate('pmFontsReady');page.locator('#begin').click();return page,context
  def test_complete_flow(self):
   page,context=self.page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   self.assertTrue(page.locator('#generate').is_disabled());self.assertEqual(page.evaluate('document.activeElement.id'),'step-one')
@@ -70,7 +70,7 @@ class CompleteFlow(unittest.TestCase):
   with page.expect_download()as download:page.locator('#save').click()
   file=ART/'career-export.png';download.value.save_as(str(file));self.assertEqual(download.value.suggested_filename,'my-pm-career-dna.png')
   from PIL import Image
-  with Image.open(file)as image:self.assertEqual(image.size,(3200,2160))
+  with Image.open(file)as image:self.assertEqual(image.size,(3200,2100))
   self.assertGreater(file.stat().st_size,30000)
   self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial+1)
   # Change requirements in the original input and regenerate through the same flow.
@@ -81,6 +81,13 @@ class CompleteFlow(unittest.TestCase):
   variant=page.evaluate('structuredClone(renderVariant)');page.set_viewport_size({'width':390,'height':844});self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
   page.wait_for_function("document.querySelector('#map-visual').dataset.layout==='mobile'");self.assertEqual(page.evaluate('renderVariant'),variant);self.assertEqual(page.locator('#map-visual > svg').get_attribute('data-avatar'),variant['avatar_id']);self.assertEqual(page.locator('#map-visual > svg').count(),1);self.assertEqual(page.locator('#result-panel canvas').count(),0);page.screenshot(path=str(ART/'career-mobile.png'),full_page=True);page.locator('#map-visual').screenshot(path=str(ART/'career-mobile-map.png'))
   self.assertEqual(page.evaluate('Object.keys(localStorage).length'),0);self.assertFalse(errors,errors);context.close()
+ def test_local_rounded_fonts_match_measurement_and_export(self):
+  page,context=self.page()
+  details=page.evaluate("""()=>{const ctx=document.createElement('canvas').getContext('2d');ctx.fontKerning='none';return Object.entries(PM_DNA_FONTS).map(([kind,f])=>{const sample='Scalable Platform Design',s=30;ctx.font=`600 ${s}px ${f.family}`;const measured=ctx.measureText(sample).width,outline=[...sample].reduce((n,ch)=>n+f.glyphs[ch].advance,0)*s/f.units;ctx.font='600 30px Arial';return {loaded:document.fonts.check(`600 30px ${f.family}`),difference:Math.abs(measured-outline),distinct:Math.abs(measured-ctx.measureText(sample).width)>1}})}""")
+  self.assertTrue(all(x['loaded']and x['distinct']and x['difference']<.5 for x in details),details)
+  page.evaluate('(d)=>renderDNAPoster(exportCanvas,d,nextPMVariant())',make_map(4,4))
+  self.assertTrue(page.evaluate('exportCanvas.renderMetrics.outlinedText&&exportCanvas.renderMetrics.exportTextCount>20&&exportCanvas.renderMetrics.fontsLoaded'))
+  context.close()
  def test_all_layouts_and_explicit_overflow_fallback(self):
   page,context=self.page()
   for j in range(1,5):
@@ -118,7 +125,7 @@ class CompleteFlow(unittest.TestCase):
      for item in d['strengths']:item['methods']=[{'label':label,'evidence_quote':item['evidence_quotes'][0]}for label in ['Golden-set evaluation','Reliability trade-offs','Controlled experiments'][:count]]
      for mobile in [False,True]:
       metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[d,mobile]);self.assertTrue(metrics['ok'],(j,k,count,mobile,metrics['issues']));self.assertEqual(metrics['collisions'],[])
-      if not mobile:self.assertLessEqual(metrics['height'],1080)
+      if not mobile:self.assertLessEqual(metrics['height'],1100)
   context.close()
  def test_actual_painted_foreground_bounds_do_not_overlap(self):
   page,context=self.page();d=make_map(4,4);d['journey_type']='chronological'

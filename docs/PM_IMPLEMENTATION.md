@@ -28,3 +28,16 @@ A real-provider draft also exposed an optional date caption rejected by general 
 The desktop canvas is 1600×1080 (previously 1600×1290); the PNG is 3200×2160. This removes about 16% of the height while keeping readable type and reserved date slots. Capability cards use an inset methods area. No methods are fabricated to fill the area. Older maps without the additive methods field still render/validate, supporting independent frontend/API rollout. The mobile role rows are tighter and method text has its own readable bounds.
 
 56 automated methods pass, including new method provenance, specialist-name grounding, English-only labels with Chinese evidence, legacy-map compatibility and all 128 dated zero-to-three-method/card/layout combinations. Existing dated/undated layouts, browser-painted bounds, generation, parsing, voice fallback, variants, single PNG and counts remain covered. Both services are live and the full real-provider browser flow passed; see DEPLOYED.md.
+
+
+## Reference-quality identity release
+
+The authoritative acceptance document is `docs/PM_DNA_DELIVERY_STANDARD.md`; it explicitly requires any promotional sample to come from the deployed generator's actual download. The runtime editorial skill now prioritises demonstrated challenge, ambiguity, decision constraints and differentiation. Rich inputs should yield two role highlights and two to three concrete practices, while sparse evidence is never padded. New role highlights carry their own exact source quotes; older maps remain compatible. Strength descriptions allow88 characters and14 words for complete judgement statements. Generic practice labels such as Productisation or Operational optimisation require a more specific evidence-backed replacement.
+
+Generation now uses medium reasoning effort (same model, existing attempt quota and at most one bounded repair); review-only requests retain low reasoning. This may take longer and consume more tokens per call. No extra editorial/model/image request was added, and quota or provider configuration was not changed.
+
+Rounded Fredoka600 headings and Nunito650 body glyphs are bundled under their SIL OFL licenses. The browser preview measures these exact local faces with kerning disabled; PNG export uses outlines from those same static fonts to avoid SVG-image font fallback. The complete license text accompanies the font data inside the bundled HTML. Font generation is a development-only script, not a Render dependency.
+
+Journey text now groups one or two highlights just over the island, with a separate date slot only when needed. Desktop map is1600×1050 without dates and1600×1090 with dates, exported at2× resolution (3200×2100 or3200×2180); there is still one landscape output and no format selector. Capability cards reserve more room for the three information levels, rather than shrinking titles to make content fit. Existing old fixed-size notes above describe historical releases.
+
+61 automated test methods passed, including local font/glyph advance matching, outlined PNG export, role-highlight provenance and generation bounds, generic-practice rejection, multilingual and legacy compatibility, actual painted bounds, all cardinalities, single-result flow and existing counter checks. Production verification is recorded in DEPLOYED.md after rollout.
