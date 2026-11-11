@@ -6,12 +6,12 @@ from tests.fixtures import SOURCE,make_map
 class ContractTests(unittest.TestCase):
  def setUp(self):app.COUNTER.update(day='',count=0)
  def test_all_independent_cardinalities(self):
-  for j in range(1,6):
-   for k in range(1,6):self.assertEqual(len(app.validate_map(make_map(j,k),[SOURCE])['strengths']),k)
+  for j in range(1,5):
+   for k in range(1,5):self.assertEqual(len(app.validate_map(make_map(j,k),[SOURCE])['strengths']),k)
  def test_caps_and_single_strength(self):
   self.assertEqual(len(app.validate_map(make_map(1,1),[SOURCE])['strengths']),1)
   for group in ['journey','strengths']:
-   data=make_map(5,5);data[group].append(copy.deepcopy(data[group][0]))
+   data=make_map(4,4);data[group].append(copy.deepcopy(data[group][0]))
    with self.assertRaises(ValueError):app.validate_map(data,[SOURCE])
  def test_evidence_ids_quotes_and_associations(self):
   for mutate in [lambda d:d['journey'][0].update(evidence_refs=['invented']),lambda d:d['strengths'][0]['evidence_quotes'][0].update(quote='Invented promotion or achievement'),lambda d:d['strengths'][0].update(journey_ids=['j_missing']),lambda d:d['journey'][1].update(id='j1')]:

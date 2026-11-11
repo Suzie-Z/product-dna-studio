@@ -23,7 +23,7 @@ engineer='我是一名后端工程师，负责可复用API和分布式服务。�
 server=ai_server.ThreadingHTTPServer(('127.0.0.1',0),ai_server.Handler);threading.Thread(target=server.serve_forever,daemon=True).start();url='http://127.0.0.1:'+str(server.server_port)
 try:
  def chef_case():
-  d=career_ai.process_generate({'sources':[chef]})['map'];assert d['status']=='ready';words=' '.join(career_ai.export_strings(d)).lower();assert any(w in words for w in ['kitchen','menu','food','recipe','culinary']);assert 'product manager'not in words;assert 1<=len(d['journey'])<=5 and 1<=len(d['strengths'])<=5;return d
+  d=career_ai.process_generate({'sources':[chef]})['map'];assert d['status']=='ready';words=' '.join(career_ai.export_strings(d)).lower();assert any(w in words for w in ['kitchen','menu','food','recipe','culinary']);assert 'product manager'not in words;assert 1<=len(d['journey'])<=4 and 1<=len(d['strengths'])<=4;return d
  chef_map=record('Chef: profession-specific grounded generation',chef_case)
  with sync_playwright()as p:
   executable=os.environ.get('CHROMIUM_PATH')or shutil.which('chromium');browser=p.chromium.launch(**({'executable_path':executable}if executable else {}),headless=True,args=['--no-sandbox'],env={k:v for k,v in os.environ.items()if k!='OPENAI_API_KEY'})
@@ -31,13 +31,15 @@ try:
   def generation():
    page.locator('#generate').click();page.locator('#result-panel').wait_for(state='visible',timeout=240000);d=page.evaluate('structuredClone(result)');assert d['output_language']=='en';assert any(w in ' '.join(career_ai.export_strings(d)).lower()for w in ['reliab','api','systems','service','backend']);return d
   original=record('Mandarin engineer: real browser generation and English output',generation)
-  def refinement():
-   page.locator('#refinement').fill('只把第一项核心能力的标题改成 Reliable Delivery，其他内容保持不变。我从来没有管理过团队，不要添加团队领导的说法。');page.locator('#refine-consent').check();page.locator('#update').click();page.wait_for_function("document.querySelector('#refine-status').textContent==='Your map is updated.'",timeout=240000)
-   d=page.evaluate('structuredClone(result)');assert d['strengths'][0]['label']=='Reliable Delivery';assert d['superpower']==original['superpower'];assert d['strengths'][1:]==original['strengths'][1:];assert not any(w in d['career_signature'].lower()for w in ['manager','leader','chief']);return d
-  updated=record('Chinese refinement: scoped change with stable unrelated facts',refinement)
+  def regeneration():
+   page.locator('#story').fill(engineer+' 重点突出可靠性工作和文档，不要添加管理经历。')
+   page.locator('#generate').click();page.wait_for_function("!document.querySelector('#result-panel').classList.contains('hidden')&&document.querySelector('#poster').renderMetrics?.ok",timeout=240000)
+   d=page.evaluate('structuredClone(result)');assert d['output_language']=='en'
+   assert not any(w in d['career_signature'].lower()for w in ['manager','leader','chief']);return d
+  updated=record('Original-input regeneration with Chinese requirements',regeneration)
   def export():
    with page.expect_download(timeout=30000)as event:page.locator('#save').click()
-   event.value.save_as(str(ART/'real-career-dna.png'));assert page.locator('#poster').evaluate('(c)=>c.renderMetrics.ok');page.locator('#poster').screenshot(path=str(ART/'real-career-preview.png'))
+   event.value.save_as(str(ART/'real-career-dna.png'));assert page.locator('#poster').evaluate('(c)=>c.renderMetrics.ok');page.locator('#map-visual').screenshot(path=str(ART/'real-career-preview.png'))
   record('Real result: high-resolution PNG download',export)
   current_sources=page.evaluate('sources()')
   def unsupported():

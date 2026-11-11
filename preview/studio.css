@@ -15,3 +15,10 @@
 @media(max-width:700px){.brand-symbol{width:34px;height:34px}.footer-meta{text-align:left}footer{align-items:flex-start;flex-direction:column;gap:14px}.privacy-summary{font-size:11px}}
 
 .keyboard-nav .composer input:focus{outline:none;box-shadow:0 2px 0 #a9a0b2}
+/* One fixed landscape download; the same SVG vocabulary reflows on phones. */
+.brand-symbol{width:50px;height:50px;border-radius:0;object-fit:contain}
+.career-map{margin-top:20px;border-radius:26px;padding:8px;background:#fff;border:1px solid #e4d8f2;box-shadow:0 15px 45px #8063a014;overflow:hidden}
+.career-map svg{display:block;width:100%;height:auto;user-select:text}.map-mobile{display:none}
+.result-heading{align-items:center}.result-heading h3{margin:0}.result-heading .generation-number{margin:0}
+.result-actions{justify-content:center;margin-top:25px}.privacy-summary{max-width:570px}
+@media(max-width:700px){.map-desktop{display:none}.map-mobile{display:block}.career-map{padding:4px;border-radius:18px}.brand-symbol{width:39px;height:39px}.result-heading{gap:10px}}

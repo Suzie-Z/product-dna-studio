@@ -5,10 +5,10 @@ A profession-agnostic, evidence-grounded career map studio. This upgrades the ex
 ## Experience
 
 1. **Share Your Journey** — one CV (PDF/DOCX/TXT), editable voice transcript, and written notes in a combined workspace. Source IDs remain stable during the session. Common contact details are redacted server-side before model processing.
-2. **Discover Your Career DNA** — real structured OpenAI generation with **1–5 journey nodes and 1–5 strengths independently**, signature, superpower, and evidence links. Sparse or conflicting evidence prompts one question instead of filling slots. Undated material is shown as **Experience Areas**.
-3. **Make It Yours** — multilingual refinement beside the map, explicit consent to resend source context, direct text editing, six-step undo, evidence review, and PNG export. Unsupported credentials require clarification; unconfirmed strengths are not exported as facts.
+2. **Discover Your Career DNA** — real structured OpenAI generation with **1–4 journey nodes and 1–4 strengths independently**, signature, superpower, and evidence links. Sparse or conflicting evidence prompts one question instead of filling slots. Undated material is shown as **Experience Areas**.
+3. **Download PNG** — one fixed high-resolution landscape map. To request changes, return to the original story input, add context or preferences, and generate again. There is no separate refinement form, manual map editor, format chooser, or third step.
 
-All exported text is English. Source quotes retain their original language only inside private evidence review. Exported graphics contain no raw quotes, source IDs, evidence notes, ratings, or contact details. No generated likeness or inferred physical attributes are used.
+All exported text is English. Evidence quotes retain their source language internally. Exported visible graphics contain no raw quotes, source IDs, ratings, or contact details. Each illustrated category has a noneditable SVG tooltip with a brief English evidence explanation; no raw quotes are placed in the SVG. No generated likeness or inferred physical attributes are used.
 
 ## Run locally
 
@@ -28,7 +28,7 @@ Open `http://localhost:10000`. The API remains healthy without a key, but model 
 - `career_ai.py`: schema, prompts, source redaction, moderation, grounding and refinement merge.
 - `ai_server.py`: bounded JSON HTTP/CORS boundary and concurrency/rate controls.
 - `preview/studio.template.html`, `studio.css`, `studio.js`: maintainable frontend sources.
-- `preview/poster.js`: portrait/square deterministic renderer with font fitting and explicit overflow fallback.
+- `preview/poster.js`: one controlled SVG scene with responsive desktop/mobile layouts, selectable text, shaded islands, a neutral toy explorer, and fixed 3200×2008 PNG export. User copy is XML-escaped; overlong text blocks download rather than clipping.
 - `build_preview.py`: emits a self-contained `preview/index.html`, compatible with the current static host.
 
 Always rebuild the bundled HTML after frontend edits and commit source plus bundle.
@@ -36,8 +36,8 @@ Always rebuild the bundled HTML after frontend edits and commit source plus bund
 Endpoints:
 
 - `POST /api/career-dna/generate`: `{sources, clarification_context?}` → `{map, change_summary, accepted_source}`.
-- `POST /api/career-dna/refine`: `{sources, previous, message, clarification_context?, context_consent:true}` → complete map plus a change summary. Existing fields are merged only through declared allowlisted paths, so undeclared model drift is discarded. Stable IDs are preserved.
-- `POST /api/career-dna/review`: `{sources,map,context_consent:true}` → consented evidence/safety and per-field English-language review for locally edited results.
+- Legacy API (not exposed in the current UI), `POST /api/career-dna/refine`: `{sources, previous, message, clarification_context?, context_consent:true}` → complete map plus a change summary. Existing fields are merged only through declared allowlisted paths, so undeclared model drift is discarded. Stable IDs are preserved.
+- Legacy API (not exposed in the current UI), `POST /api/career-dna/review`: `{sources,map,context_consent:true}` → consented evidence/safety and per-field English-language review for locally edited results.
 - `GET /health`: readiness and key-presence metadata only; no secret values.
 
 Sources use `{source_id, source_type: cv|voice_transcript|typed_story, source_label, content}`. Only text crosses the API; raw uploaded files are parsed client-side and are never handled by the server. Reference IDs and literal quote provenance are independently validated. This validates provenance, not objective truth of a career claim; users still need to review the interpretation.
@@ -54,7 +54,7 @@ node --check preview/studio.js
 node --check preview/poster.js
 ```
 
-The browser suite launches the real HTTP app with **only the OpenAI transport mocked**. It covers clarification, generation, grounding, consent, scoped refinement, undo, direct edits, safety review, actual PNG download, editable CVs, normal PDF/DOCX parsing, mixed input, microphone fallback and mobile layout. All 50 combinations of 1–5 journey nodes, 1–5 strengths and two image formats are checked. Parser tests fetch version-pinned libraries from cdnjs into ignored `work/` test assets, using verified HTTPS.
+The browser suite launches the real HTTP app with **only the OpenAI transport mocked**. It covers clarification, generation, original-input regeneration, actual PNG download, editable CV inputs, normal PDF/DOCX parsing, mixed-language input, microphone fallback, mobile layout, XML escaping and overflow. All 32 combinations of 1–4 journey nodes, 1–4 strengths and desktop/mobile layouts are checked. Backend tests retain coverage of the legacy stateless refinement endpoints, which are not exposed in the simplified UI. Parser tests fetch version-pinned libraries from cdnjs into ignored `work/` test assets, using verified HTTPS.
 
 Opt-in real-provider tests (billable) use a securely configured `OPENAI_API_KEY`, or an echo-disabled in-memory prompt:
 
@@ -62,7 +62,7 @@ Opt-in real-provider tests (billable) use a securely configured `OPENAI_API_KEY`
 python tests/live_smoke.py
 ```
 
-This exercises profession specificity, Mandarin-to-English output, an actual browser refinement, stable unrelated fields, real PNG export, unsupported credentials and document injection. It has a ten-call safety cap per test process, including repair attempts. It never prints or saves the key. Artifacts go into ignored `work/`.
+This exercises profession specificity, Mandarin-to-English output, original-input regeneration, real PNG export, unsupported credentials and document injection. It has a ten-call safety cap per test process, including repair attempts. It never prints or saves the key. Artifacts go into ignored `work/`.
 
 ## Release
 
@@ -74,4 +74,4 @@ The older `server.py`, `public/`, `test_server.py` and `launch.py` preserve the 
 
 `GET /api/stats` returns only total/today generation counts and a storage scope. A successful `/generate` response includes `generation_number` and the same count snapshot. Failed and clarification responses, refinements, and exports do not increment it. `generation_counts.py` is deliberately separate from AI/content processing.
 
-The default mode is process memory and is labelled accordingly in the UI. To retain counts across service restarts, review and approve `render-counts.yaml`, which adopts the existing free API service and connects a private free Postgres instance. The table stores only `generation_day` and `generated_count`. No names, sources, CVs, maps or visitor IDs are written. The free database expires after 30 days; export/migrate totals before then. This plan is prepared for review, not implicitly applied. The observer goal of 20 generations/day does not change the existing AI call limit.
+The default mode is process memory and is labelled accordingly in the UI. To retain counts across service restarts, review and approve `render-counts.yaml`, which adopts the existing free API service and connects a private free Postgres instance. The table stores only `generation_day` and `generated_count`. No names, sources, CVs, maps or visitor IDs are written. The free database expires after 30 days; export/migrate totals before then. The live API currently reports persistent counting; this release preserves its existing connection without provisioning new resources. The observer goal of 20 generations/day does not change the existing AI call limit.

@@ -44,6 +44,10 @@ The old live client uses `/api/generate`, while this release uses `/api/career-d
 
 `render.yaml` is a single free Python web service that serves both the bundled UI and API, with no disk or database. Configure its secret through Render Environment, not YAML. `render-ai.yaml`/`render-preview.yaml` document the existing two-service setup; do not apply all manifests together and create duplicate services. Review any proposed Blueprint plan before applying it.
 
-`Dockerfile` is an optional equivalent container build. Production has no pip dependencies. The container runs as an unprivileged user and takes its API key only from the runtime environment.
+`Dockerfile` is an optional equivalent container build. The nonpersistent runtime uses the Python standard library. Optional persistent counts install the PostgreSQL driver from `requirements.txt`. The container runs as an unprivileged user and takes its API key only from the runtime environment.
 
 Free hosting remains subject to Render's included usage allowances. OpenAI generation/refinement charges are separate. No paid infrastructure or public trial date is provisioned by this prepared release.
+
+## Anonymous counter pilot
+
+See [ANONYMOUS_COUNTS.md](ANONYMOUS_COUNTS.md) and `render-counts.yaml`. The prepared free plan creates only a date/count database and connects the existing free API. It has not been applied. Render plan review: https://dashboard.render.com/blueprint/exs-dbprosek1f9s73cpln4g/sync/exe-dbprosmk1f9s73cplo6g . Explicit approval of this reviewed plan is required before applying it. The existing provider-attempt limit stays 10/day; 20 completed maps/day is only an observation target.
