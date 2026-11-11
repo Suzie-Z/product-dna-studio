@@ -5,6 +5,34 @@ import career_ai as app
 from tests.fixtures import SOURCE,make_map
 class ContractTests(unittest.TestCase):
  def setUp(self):app.COUNTER.update(day='',count=0)
+ def test_methods_require_own_associated_verbatim_evidence(self):
+  for quote in [{'source_id':'unknown','quote':SOURCE['content'][:50]}, {'source_id':SOURCE['source_id'],'quote':'I invented an evaluation framework.'}]:
+   d=make_map(1,1);d['strengths'][0]['methods'][0]['evidence_quote']=quote
+   with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
+ def test_method_labels_are_bounded_safe_and_unique(self):
+  for label in ['产品能力','x@example.com','A'*25,'One two three four five','World-class visionary']:
+   d=make_map(1,1);d['strengths'][0]['methods'][0]['label']=label
+   with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
+  d=make_map(1,1);d['strengths'][0]['methods']*=2
+  with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
+ def test_named_methods_cannot_borrow_unrelated_quotes(self):
+  for label in ['Golden-set evaluation','RCA','RAG','RLHF','Fine-tuning','Red teaming','Causal inference']:
+   d=make_map(1,1);d['strengths'][0]['methods'][0]['label']=label
+   with self.assertRaises(ValueError,msg=label):app.validate_map(d,[SOURCE])
+ def test_method_chinese_evidence_becomes_english_display_label(self):
+  source={**SOURCE,'content':SOURCE['content']+' 我构建金标评测数据并进行根因分析。'}
+  d=make_map(1,1);d['strengths'][0]['methods']=[{'label':'Golden-set evaluation','evidence_quote':{'source_id':SOURCE['source_id'],'quote':'我构建金标评测数据并进行根因分析。'}}]
+  out=app.validate_map(d,[source]);self.assertIn('Golden-set evaluation',app.export_strings(out));self.assertNotIn('我',' '.join(app.export_strings(out)))
+ def test_additive_methods_rollout_accepts_existing_maps(self):
+  d=make_map(1,1);del d['strengths'][0]['methods']
+  self.assertEqual(app.validate_map(d,[SOURCE])['strengths'][0]['methods'],[])
+ def test_generation_schema_pairs_method_quotes_to_sources(self):
+  schema=app.generation_schema([SOURCE])
+  options=schema['properties']['strengths']['items']['properties']['methods']['items']['properties']['evidence_quote']['anyOf']
+  self.assertTrue(options)
+  for option in options:
+   self.assertEqual(option['properties']['source_id']['enum'],[SOURCE['source_id']])
+   for quote in option['properties']['quote']['enum']:self.assertIn(app.normalized(quote),app.normalized(SOURCE['content']))
  def test_all_independent_cardinalities(self):
   for j in range(1,5):
    for k in range(1,5):self.assertEqual(len(app.validate_map(make_map(j,k),[SOURCE])['strengths']),k)
@@ -161,6 +189,7 @@ class ContractTests(unittest.TestCase):
   data=make_map(1,1)
   for item in data['journey']+data['strengths']:
    item['evidence_quotes'][0]['quote']='I evaluated "model fit" across real-world workflows'
+  data['strengths'][0]['methods']=[]
   self.assertEqual(app.validate_map(data,[source])['status'],'ready')
   data['strengths'][0]['evidence_quotes'][0]['quote']='I invented an award-winning model'
   with self.assertRaises(ValueError):app.validate_map(data,[source])

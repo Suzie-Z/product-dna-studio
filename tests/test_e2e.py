@@ -25,7 +25,9 @@ def model_transport(path,payload,timeout=90):
  else:
   d=make_map(3,3)
   for group in ['journey','strengths']:
-   for item in d[group]:item.update(evidence_refs=[src['source_id']],evidence_quotes=[{'source_id':src['source_id'],'quote':quote}])
+   for item in d[group]:
+    item.update(evidence_refs=[src['source_id']],evidence_quotes=[{'source_id':src['source_id'],'quote':quote}])
+    for method in item.get('methods',[]):method['evidence_quote']={'source_id':src['source_id'],'quote':quote}
   response=d
  return {'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':json.dumps(response)}]}]}
 
@@ -68,7 +70,7 @@ class CompleteFlow(unittest.TestCase):
   with page.expect_download()as download:page.locator('#save').click()
   file=ART/'career-export.png';download.value.save_as(str(file));self.assertEqual(download.value.suggested_filename,'my-pm-career-dna.png')
   from PIL import Image
-  with Image.open(file)as image:self.assertEqual(image.size,(3200,2580))
+  with Image.open(file)as image:self.assertEqual(image.size,(3200,2160))
   self.assertGreater(file.stat().st_size,30000)
   self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial+1)
   # Change requirements in the original input and regenerate through the same flow.
@@ -106,9 +108,22 @@ class CompleteFlow(unittest.TestCase):
     for mobile in [False,True]:
      metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[d,mobile]);self.assertTrue(metrics['ok'],metrics['issues']);self.assertEqual(metrics['collisions'],[])
   context.close()
+ def test_compact_cards_fit_zero_to_three_methods_across_layouts(self):
+  page,context=self.page()
+  for j in range(1,5):
+   for k in range(1,5):
+    for count in range(4):
+     d=make_map(j,k);d['journey_type']='chronological'
+     for item in d['journey']:item['date_label']='2020–2022'
+     for item in d['strengths']:item['methods']=[{'label':label,'evidence_quote':item['evidence_quotes'][0]}for label in ['Golden-set evaluation','Reliability trade-offs','Controlled experiments'][:count]]
+     for mobile in [False,True]:
+      metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[d,mobile]);self.assertTrue(metrics['ok'],(j,k,count,mobile,metrics['issues']));self.assertEqual(metrics['collisions'],[])
+      if not mobile:self.assertLessEqual(metrics['height'],1080)
+  context.close()
  def test_actual_painted_foreground_bounds_do_not_overlap(self):
   page,context=self.page();d=make_map(4,4);d['journey_type']='chronological'
   for item in d['journey']:item['date_label']='2020–2022'
+  for item in d['strengths']:item['methods']=[{'label':label,'evidence_quote':item['evidence_quotes'][0]}for label in ['Golden-set evaluation','Reliability trade-offs','Controlled experiments']]
   page.evaluate('(d)=>{renderDNAMap(document.querySelector("#map-visual"),d);document.querySelector("#step-two").classList.remove("hidden");document.querySelector("#result-panel").classList.remove("hidden")}',d)
   for width in [1440,390]:
    page.set_viewport_size({'width':width,'height':1000});page.wait_for_function('(mode)=>document.querySelector("#map-visual").dataset.layout===mode',arg='mobile'if width==390 else'desktop')
@@ -121,7 +136,7 @@ class CompleteFlow(unittest.TestCase):
   self.assertEqual(len({v['avatar_id']for v in values}),24)
   for start in range(0,24,6):self.assertEqual(len({v['theme_id']for v in values[start:start+6]}),6)
   for variant in values:
-   data=page.evaluate('([d,v])=>buildDNAScene(d,false,v).metrics',[make_map(4,4),variant]);self.assertTrue(data['ok']);self.assertEqual(data['avatar_id'],variant['avatar_id']);self.assertEqual(data['theme_id'],variant['theme_id'])
+   data=page.evaluate('([d,v])=>buildDNAScene(d,false,v).metrics',[make_map(4,4),variant]);self.assertTrue(data['ok'],data['issues']);self.assertEqual(data['avatar_id'],variant['avatar_id']);self.assertEqual(data['theme_id'],variant['theme_id'])
   context.close()
  def test_upload_clear_voice_and_fallback(self):
   page,context=self.page();page.locator('#story').fill('My typed notes will stay when the CV is removed.')

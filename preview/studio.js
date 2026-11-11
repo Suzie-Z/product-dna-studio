@@ -130,6 +130,7 @@ async function renderResult(){
   for(const item of result[group]){
    const section=document.createElement('section'),h=document.createElement('h5'),note=document.createElement('p');h.textContent=item.label+(item.date_label?' · '+item.date_label:'');note.textContent=item.evidence_note;section.append(h,note);
    for(const q of item.evidence_quotes){const quote=document.createElement('blockquote');quote.textContent=q.quote;section.append(quote)}
+   for(const method of item.methods||[]){const label=document.createElement('p'),quote=document.createElement('blockquote');label.textContent=method.label;quote.textContent=method.evidence_quote.quote;section.append(label,quote)}
    $('journey-evidence').append(section);
   }
  }
