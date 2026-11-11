@@ -1,3 +1,17 @@
+# Single-visible-result correction — 11 November 2026 (Australia/Sydney)
+
+https://product-dna-studio-preview.onrender.com
+
+- Frontend commit `4f10ae209759f1be412a8a28d07e18cb1b8ec704`, deploy `dep-dbpucd0u01pc73992fm0`: live.
+- Confirmed the actual duplicate-output bug in the production browser: one visible SVG PLUS one visible export canvas. The global `canvas {display:block}` overrode the canvas `hidden` attribute. Previous SVG-count-only verification missed this. Those older one-result claims were incorrect.
+- Export canvas is now detached from the DOM. Removed global canvas display rules and added an explicit hidden-attribute guard. Production rendering verification now reports one visible SVG root, zero DOM export canvases, zero visible export canvases. PNG download passed and phone resizing still leaves a single map. The API was not redeployed because the fix changes only frontend behavior.
+- Four browser regression tests passed with the stronger absence-of-DOM-canvas assertions, CV/voice input, regeneration and PNG download checks. Production rendering verification uses a synthetic map fixture and does not claim a new real-provider generation test or increment production counts.
+- A separate Codex PM correction handoff was prepared: actionable requirements, 24 character sprites, 24 internet-PM icons, 6 theme palettes, 15 PM role categories, reference-archetype mappings and both original reference images. The generated atlases have 256px native cells; crop and high-resolution use require the documented checks. These libraries and the PM-specific selection/semantic changes are prepared for integration, not claimed as already implemented on the live site.
+
+See [Codex PM correction standard](CODEX_PM_CORRECTION_STANDARD.md).
+
+---
+
 # Reference-fidelity illustrated world — 11 November 2026 (Australia/Sydney)
 
 https://product-dna-studio-preview.onrender.com
