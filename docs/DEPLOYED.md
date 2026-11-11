@@ -1,3 +1,20 @@
+# PM Career DNA — published integrated release — 11 November 2026 (Australia/Sydney)
+
+https://product-dna-studio-preview.onrender.com
+
+- Frontend commit `ccaf0f0b529aea02495b384c771adac081cc318c`, deploy `dep-dbq086u7bikc73bksovg`: live. Served self-contained HTML matches the committed bundle.
+- API commit `437a42ed39eb6c31bd7e3337415c5a9cbe541f16`, deploy `dep-dbq0jtek1f9s73d8eedg`: live. A previous rollout timed out before process startup; retrying the same tested commit succeeded.
+- PM-only branding, PM/DNA logo, actual PM role taxonomy, 24 neutral avatars, 24 product-scene icons and six theme palettes are integrated into the application. Earlier handoff-only descriptions below are historical.
+- One visible SVG result; detached export canvas; one 3200×2580 `my-pm-career-dna.png`. New generation chooses a fresh avatar/theme; resize and download retain it. No manual editor, format selection or duplicate result.
+- 49 automated test methods passed: 46 backend/browser tests plus three aggregate-counter tests. Coverage includes all 64 dated/undated desktop/mobile cardinality combinations, actual clipped foreground geometry, 24 avatar variants, six-theme rotation, PM scope, evidence, input parsing, voice fallback, regeneration and download.
+- Complete production browser flow passed using synthetic PM experience and real OpenAI calls: non-PM clarification without count → multilingual CV → English PM map → PNG download → Chinese original-input changes → regeneration → phone layout. Result roles: Growth PM, Operations PM, Platform PM, AI PM. Capabilities: Growth experimentation, Workflow design, Platform systems thinking, AI product judgement. Desktop and mobile report no foreground collisions, one map, zero DOM export canvases, no horizontal mobile overflow and no browser errors/local storage.
+- Date captions now require source-supported years/intervals; invalid optional captions are omitted instead of blocking valid maps. Role/capability provenance requirements remain strict.
+- Existing free services, server-side credentials, persistent numeric aggregate counter, daily provider-attempt limit and pilot schedule are unchanged. Successful test generations are included in total counts; download does not increment them. No visitor CV/story/map storage was added.
+
+See [implementation and limits](PM_IMPLEMENTATION.md). Local synthetic verification artifacts are in `/workspace/work/pm-live/report.json` and accompanying screenshots/PNG (not user data and not publicly published).
+
+---
+
 # Single-visible-result correction — 11 November 2026 (Australia/Sydney)
 
 https://product-dna-studio-preview.onrender.com
