@@ -31,7 +31,8 @@ Open `http://localhost:10000`. The API remains healthy without a key, but model 
 - `career_ai.py`: schema, prompts, source redaction, moderation, grounding and refinement merge.
 - `ai_server.py`: bounded JSON HTTP/CORS boundary and concurrency/rate controls.
 - `preview/studio.template.html`, `studio.css`, `studio.js`: maintainable frontend sources.
-- `preview/poster.js`: one controlled SVG scene with collision checks, responsive layouts, illustrated rocky islands, 24 PM icons and 24 neutral avatars, and fixed 3200×2580 PNG export. User copy is XML-escaped; overlong text blocks download rather than clipping.
+- `skills/pm-dna-editorial/SKILL.md`: runtime-loaded editorial standard for distinctive decision-value copy and individually evidenced method labels.
+- `preview/poster.js`: one controlled SVG scene with collision checks, responsive layouts, illustrated rocky islands, 24 PM icons and 24 neutral avatars, and fixed 3200×2160 PNG export. User copy is XML-escaped; overlong text blocks download rather than clipping.
 - `build_preview.py`: emits a self-contained `preview/index.html`, compatible with the current static host.
 
 Always rebuild the bundled HTML after frontend edits and commit source plus bundle.

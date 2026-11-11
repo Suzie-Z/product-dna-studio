@@ -1,3 +1,19 @@
+# Compact, deeper PM DNA — published 11 November 2026 (Australia/Sydney)
+
+https://product-dna-studio-preview.onrender.com
+
+- Frontend and API commit `623f7e9664171474568796d65ae81a806fbf091c` are live. Static deploy `dep-dbq1s89srm7s7398kk20`; API deploy `dep-dbq1s62jnfac73erie00`. The live HTML matches the tested bundle byte for byte.
+- Desktop map height reduced from 1290 to 1080 (about 16%); one downloadable PNG is now 3200×2160. Tightened role/icon/description/island spacing while keeping reserved dates and readable desktop/mobile copy.
+- Runtime loads [PM editorial skill](../skills/pm-dna-editorial/SKILL.md). Cards now combine a capability title, decision-value sentence and zero to three concrete source-backed methods. No methods are added to fill slots. All labels pass display safety; each method has its own associated verbatim source quote. Selected named techniques require explicit mention or supported multilingual equivalent in their own quote. Citations establish provenance, not independent certification or exhaustive semantic verification.
+- 56 automated test methods passed. New coverage includes method provenance, specialist-name grounding, multilingual evidence/English labels, older-map compatibility and 128 dated layout/card/method-count combinations. Actual foreground geometry, parsing, voice fallback, single-result/download, variants and counter checks remain covered.
+- Complete production browser flow passed with synthetic PM experience and real OpenAI calls: non-PM clarification without count, multilingual CV upload, English map, one PNG download, Chinese requirements through original-input regeneration, changed avatar/theme, phone layout, no foreground collisions or browser errors/local storage. Downloads retain the variant and do not increment the persistent aggregate count.
+- Real regenerated AI card: `AI product judgement` → `Assess model fit and failure modes for product use` → `Golden-set evaluation` / `Failure analysis`. Growth methods: `Funnel analysis`, `Controlled experiments`, `Root-cause analysis`. These came from the synthetic test CV, not an assertion about every visitor.
+- Existing hosting plans, server-side credentials, quota and pilot schedule are unchanged. No input/output persistence, second image, manual editor or extra image-model call was introduced. Counts include verification generations.
+
+See [implementation](PM_IMPLEMENTATION.md). Local synthetic screenshots, maps, PNG and report: `/workspace/work/pm-editorial-live/`.
+
+---
+
 # PM Career DNA — published integrated release — 11 November 2026 (Australia/Sydney)
 
 https://product-dna-studio-preview.onrender.com
