@@ -10,4 +10,8 @@ The HTML logo attachment was a saved ChatGPT page without a usable embedded logo
 
 Privacy copy is scoped to Career DNA Studio, with an AI processing policy link and the existing disclosure before Generate. Only the total completed-generation count is displayed; the app continues to expose no content storage or visitor tracking. The live counter already reports persistent storage; this release preserves the existing database connection and does not provision resources or change call limits.
 
-Validation: 40 automated tests, including all 32 independent desktop/mobile 1–4 cardinality combinations, PDF/DOCX/TXT parsing, voice and fallback, clarification, original-input regeneration, XML escaping, overflow handling, counter behavior, and PNG download. Legacy backend refinement/review safety tests remain; those APIs are no longer exposed by the UI.
+Validation: 42 automated tests, including all 32 independent desktop/mobile 1–4 cardinality combinations, PDF/DOCX/TXT parsing, voice and fallback, clarification, original-input regeneration, XML escaping, overflow handling, counter behavior, and PNG download. Legacy backend refinement/review safety tests remain; those APIs are no longer exposed by the UI.
+
+Repair feedback now names the exact English-copy field when validation fails, rather than a generic language error. If both bounded attempts fail, the API supplies only a safe rule/field diagnostic, never submitted text or model copy. The page preserves the input and shows the existing short retry message. No content logging was introduced.
+
+Generation now uses a per-request citation schema whose allowed alternatives pair each exact source excerpt with its real source ID. Bounded excerpts are distributed across the source, then selected by the model; citations cannot be freely rewritten or attached to another source under constrained decoding. The existing independent literal-quote, reference and safety checks still run afterward.

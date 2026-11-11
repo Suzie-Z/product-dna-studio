@@ -8,6 +8,21 @@ class ContractTests(unittest.TestCase):
  def test_all_independent_cardinalities(self):
   for j in range(1,5):
    for k in range(1,5):self.assertEqual(len(app.validate_map(make_map(j,k),[SOURCE])['strengths']),k)
+ def test_language_repair_identifies_field_without_leaking_content(self):
+  d=make_map(1,1);d['journey'][0]['description']='用户的原始中文内容'
+  with self.assertRaises(ValueError)as error:app.validate_map(d,[SOURCE])
+  self.assertIn('/journey/0/description',str(error.exception));self.assertNotIn('用户',str(error.exception))
+ def test_citation_schema_pairs_only_literal_source_passages(self):
+  sources=[{**SOURCE,'content':SOURCE['content']+' '+('Additional exact evidence. '*100)},{**SOURCE,'source_id':'src_preferences','content':'重点突出可靠性，不要添加团队管理经历。'}]
+  schema=app.generation_schema(sources)
+  for group in ['journey','strengths']:
+   options=schema['properties'][group]['items']['properties']['evidence_quotes']['items']['anyOf']
+   total=0
+   for option in options:
+    props=option['properties'];key=props['source_id']['enum'][0];source=next(s for s in sources if s['source_id']==key)
+    for quote in props['quote']['enum']:
+     self.assertIn(quote,source['content']);self.assertGreaterEqual(len(quote),6);self.assertLessEqual(len(quote),240);total+=1
+   self.assertLessEqual(total,180);self.assertEqual(len(options),2)
  def test_caps_and_single_strength(self):
   self.assertEqual(len(app.validate_map(make_map(1,1),[SOURCE])['strengths']),1)
   for group in ['journey','strengths']:
