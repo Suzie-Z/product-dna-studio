@@ -45,8 +45,19 @@ class CompleteFlow(unittest.TestCase):
  def test_complete_flow(self):
   page,context=self.page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   self.assertNotIn('Product DNA',page.locator('body').inner_text());self.assertTrue(page.locator('#generate').is_disabled())
+  self.assertEqual(page.evaluate('document.activeElement.id'),'step-one')
+  self.assertEqual(page.locator('#step-one h2').inner_text(),'Share Your Journey')
+  self.assertEqual(page.locator('#step-two h2').inner_text(),'Discover Your Career DNA')
+  self.assertTrue(page.locator('.brand-symbol').evaluate('(img)=>img.complete&&img.naturalWidth>0'))
+  page.locator('#story').click()
+  self.assertEqual(page.locator('#story').evaluate('(e)=>getComputedStyle(e).outlineStyle'),'none')
+  self.assertEqual(page.locator('.composer').evaluate('(e)=>getComputedStyle(e).borderColor'),'rgb(225, 214, 237)')
+  initial=json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations']
   page.locator('#story').fill('I work in tech.');page.locator('#generate').click();page.locator('#clarification').wait_for(state='visible');self.assertFalse(page.locator('#result-panel').is_visible())
+  self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial)
   page.locator('#clarification-answer').fill('I researched customer needs and tested working prototypes. I documented the results for the design team.');page.locator('#answer').click();page.locator('#result-panel').wait_for(state='visible')
+  self.assertEqual(page.locator('#generation-number').inner_text(),'Generation #'+str(initial+1))
+  self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial+1)
   self.assertEqual(page.locator('.evidence-item').count(),6);self.assertIn('src_',page.evaluate('JSON.stringify(result)'));self.assertNotIn('src_',page.locator('#poster').get_attribute('aria-label'))
   page.locator('#evidence').evaluate('(e)=>e.parentElement.open=true');self.assertTrue(page.locator('.evidence-item').first.is_visible())
   page.screenshot(path=str(ART/'career-desktop.png'),full_page=True)
@@ -68,6 +79,7 @@ class CompleteFlow(unittest.TestCase):
   page.locator('#poster').screenshot(path=str(ART/'career-square.png'))
   page.set_viewport_size({'width':390,'height':844});self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'));page.screenshot(path=str(ART/'career-mobile.png'),full_page=True)
   self.assertEqual(page.evaluate('Object.keys(localStorage).length'),0)
+  self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial+1)
   page.once('dialog',lambda d:d.accept());page.locator('#start-over').click();self.assertEqual(page.locator('#story').input_value(),'');self.assertFalse(page.locator('#result-panel').is_visible());self.assertFalse(errors,errors);context.close()
  def test_all_layouts_and_explicit_overflow_fallback(self):
   page,context=self.page()

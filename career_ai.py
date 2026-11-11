@@ -51,7 +51,13 @@ def has_credential_evidence(sources):
    if CREDENTIAL.search(sentence)and not DENIAL.search(sentence)and not REQUEST_CLAIM.search(sentence):return True
  return False
 
-def normalized(s):return re.sub(r'\s+',' ',s).casefold().strip()
+def normalized(s):
+ # PDF typography is not a difference in factual evidence. Do not paraphrase.
+ s=unicodedata.normalize('NFKC',s).translate(str.maketrans({'’':"'",'‘':"'",'“':'"','”':'"','–':'-','—':'-','‐':'-','‑':'-','\u00ad':'','\u200b':''}))
+ s=''.join(' 'if unicodedata.category(c)=='Co'else c for c in s)
+ s=re.sub(r'(?<=\w)-\s+(?=\w)','-',s)
+ return re.sub(r'\s+',' ',s).casefold().strip().strip('"\'')
+
 def english(s,limit,empty=False):
  if not isinstance(s,str) or len(s)>limit or (not empty and not s.strip()):raise ValueError('text bounds')
  if re.search(r'[<>\x00-\x08]|[-–—/]$',s.strip()) or any('@' in m.group() or re.match(r'(?:https?://|www\.)',m.group(),re.I) or len(re.sub(r'\D','',m.group()))>=9 for m in CONTACT.finditer(s)) or SENSITIVE_CLAIM.search(s) or re.search(r'\d+\s*(?:%|/10|/100)',s):raise ValueError('unsafe display text')
@@ -61,19 +67,19 @@ def english(s,limit,empty=False):
  if re.search(r'\bProduct DNA\b',s,re.I):raise ValueError('stale brand')
  return s
 
-def schema_validate(value,schema):
+def schema_validate(value,schema,path="$"):
  typ=schema['type']
  if isinstance(typ,list):
   if value is None and 'null' in typ:return
   typ=next(t for t in typ if t!='null')
  if typ=='object':
-  if not isinstance(value,dict) or set(value)!=set(schema['required']):raise ValueError('object schema')
-  for k,v in value.items():schema_validate(v,schema['properties'][k])
+  if not isinstance(value,dict) or set(value)!=set(schema['required']):raise ValueError(path+': object fields do not match the schema')
+  for k,v in value.items():schema_validate(v,schema['properties'][k],path+'/'+k)
  elif typ=='array':
-  if not isinstance(value,list) or not schema['minItems']<=len(value)<=schema['maxItems']:raise ValueError('array bounds')
-  for v in value:schema_validate(v,schema['items'])
+  if not isinstance(value,list) or not schema['minItems']<=len(value)<=schema['maxItems']:raise ValueError(path+': incorrect item count')
+  for i,v in enumerate(value):schema_validate(v,schema['items'],path+'/'+str(i))
  elif typ=='string':
-  if not isinstance(value,str) or len(value)>schema.get('maxLength',10000) or ('enum'in schema and value not in schema['enum']):raise ValueError('string schema')
+  if not isinstance(value,str) or len(value)>schema.get('maxLength',10000) or ('enum'in schema and value not in schema['enum']):raise ValueError(path+': wrong string type, enum, or maximum length '+str(schema.get('maxLength','')))
  elif typ=='boolean':
   if type(value)is not bool:raise ValueError('boolean schema')
  elif typ=='integer':
@@ -97,7 +103,8 @@ def validate_map(data,sources,allow_pending=False):
   return data
  if data['clarification_question']is not None or not 1<=len(data['journey'])<=5 or not 1<=len(data['strengths'])<=5:raise ValueError('ready bounds')
  english(data['career_signature'],65);english(data['superpower'],100)
- if not 2<=len(data['career_signature'].split())<=7 or not 5<=len(data['superpower'].split())<=12:raise ValueError('signature word bounds')
+ if not 2<=len(data['career_signature'].split())<=7:raise ValueError('/career_signature: use 2-7 complete English words')
+ if not 3<=len(data['superpower'].split())<=12:raise ValueError('/superpower: use 3-12 complete English words; aim for 5-12 without padding')
  source_index={s['source_id']:s for s in sources}
  source_text='\n'.join(s['content']for s in sources)
  has_chronology=bool(re.search(r'\b(?:19|20)\d{2}\b|\b(?:then|afterwards|previously|subsequently|before|after)\b|之后|随后|以前|后来',source_text,re.I))
@@ -113,8 +120,8 @@ def validate_map(data,sources,allow_pending=False):
    refs=item['evidence_refs']
    if len(set(refs))!=len(refs) or not set(refs)<=set(source_index):raise ValueError('unknown evidence reference')
    quote_refs=set()
-   for q in item['evidence_quotes']:
-    if q['source_id']not in refs or not 6<=len(q['quote'])<=260 or normalized(q['quote'])not in normalized(source_index[q['source_id']]['content']):raise ValueError('unsupported quote')
+   for qi,q in enumerate(item['evidence_quotes']):
+    if q['source_id']not in refs or not 6<=len(q['quote'])<=260 or normalized(q['quote'])not in normalized(source_index[q['source_id']]['content']):raise ValueError('/'+group+'/'+str(i)+'/evidence_quotes/'+str(qi)+': quote must appear in the referenced source; copy a shorter exact passage')
     quote_refs.add(q['source_id'])
    if quote_refs!=set(refs):raise ValueError('reference lacks a quote')
    if group=='journey':
@@ -215,9 +222,10 @@ def process_generate(body):
    result=validate_map(response,sources)
    if result['status']=='ready':moderate('\n'.join(export_strings(result)))
    return {'map':result,'change_summary':'Your first draft is ready.'if result['status']=='ready'else'One more detail will help.','accepted_source':None}
-  except ValueError:
-   payload['validation_feedback']='The previous response failed bounds, English-copy, IDs or literal-source evidence validation. Return a corrected map grounded ONLY in these sources. Do not invent quotes.'
- raise AppError(502,'The result could not be grounded reliably. Add a specific example and try again.','ungrounded_result')
+  except ValueError as error:
+   payload['validation_feedback']={'issue':str(error)[:220],'instruction':'Repair only the invalid parts of previous_draft. Copy source evidence exactly; rephrase overlong display copy as complete short English. Do not invent facts.'}
+   payload['previous_draft']=response
+ raise AppError(502,'We couldn’t verify this AI draft. Your experience is still here—please try generating again.','ungrounded_result')
 
 def process_refine(body):
  if body.get('context_consent')is not True:raise AppError(400,'Allow your experience to be resent before updating your map.','consent_required')
@@ -244,7 +252,8 @@ def process_refine(body):
    merged=validate_map(apply_refinement(previous,candidate,response['changed_fields']),sources)
    if merged['status']=='ready':moderate('\n'.join(export_strings(merged)))
    return {'map':merged,'change_summary':response['change_summary'],'accepted_source':correction,'changed_fields':response['changed_fields']}
-  except (ValueError,KeyError,TypeError):payload['validation_feedback']='Repair invalid evidence, changed paths, English copy or schema. Preserve all unrelated fields and existing IDs.'
+  except (ValueError,KeyError,TypeError)as error:
+   payload['validation_feedback']={'issue':str(error)[:220],'instruction':'Repair only the invalid fields or paths. Preserve unrelated fields and IDs.'};payload['previous_draft']=response
  raise AppError(502,'That edit could not be verified. Try a smaller, more specific change.','ungrounded_refinement')
 
 def process_review(body):

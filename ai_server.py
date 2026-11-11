@@ -3,6 +3,7 @@ import json,os,threading,time,hashlib
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from career_ai import AppError,process_generate,process_refine,process_review
+from generation_counts import snapshot as generation_stats
 ROOT=Path(__file__).parent/'preview'
 ALLOWED_ORIGINS={'https://product-dna-studio-preview.onrender.com'}|set(filter(None,os.environ.get('ALLOWED_ORIGINS','').split(',')))
 REQUEST_LOCK=threading.Lock();RECENT={};ACTIVE=threading.BoundedSemaphore(2)
@@ -33,6 +34,9 @@ class Handler(BaseHTTPRequestHandler):
   self.send_response(204);self.send_header('Access-Control-Allow-Origin',self.headers.get('Origin',''));self.send_header('Vary','Origin');self.send_header('Access-Control-Allow-Methods','POST, GET, OPTIONS');self.send_header('Access-Control-Allow-Headers','Content-Type');self.send_header('Access-Control-Max-Age','600');self.end_headers()
  def do_GET(self):
   path=self.path.split('?')[0]
+  if path=='/api/stats':
+   try:return self.reply(200,generation_stats())
+   except Exception:return self.reply(503,{'error':'Generation count temporarily unavailable.'})
   if path=='/health':return self.reply(200,{'ok':True,'ai_configured':bool(os.environ.get('OPENAI_API_KEY')),'schema_version':'1.0'})
   paths={'/':('index.html','text/html; charset=utf-8'),'/studio.js':('studio.js','text/javascript; charset=utf-8'),'/poster.js':('poster.js','text/javascript; charset=utf-8'),'/studio.css':('studio.css','text/css; charset=utf-8')}
   if path not in paths:return self.reply(404,{'error':'Not found.'})
@@ -50,7 +54,12 @@ class Handler(BaseHTTPRequestHandler):
    if not isinstance(body,dict):raise AppError(400,'This request could not be read.','invalid_body')
    rate_limit(self.client_address[0]);acquired=ACTIVE.acquire(blocking=False)
    if not acquired:raise AppError(429,'The studio is busy. Try again shortly.','busy')
-   return self.reply(200,handlers[self.path](body))
+   result=handlers[self.path](body)
+   if self.path=='/api/career-dna/generate'and result.get('map',{}).get('status')=='ready':
+    try:
+     stats=generation_stats(increment=True);result['stats']=stats;result['generation_number']=stats['total_generations']
+    except Exception:result['stats_unavailable']=True
+   return self.reply(200,result)
   except AppError as e:return self.reply(e.status,{'error':e.message,'code':e.code})
   except (ValueError,TypeError,AttributeError,KeyError):return self.reply(400,{'error':'This request could not be read. Check your sources and try again.','code':'invalid_request'})
   except (BrokenPipeError,ConnectionResetError):return

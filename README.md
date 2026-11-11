@@ -12,7 +12,7 @@ All exported text is English. Source quotes retain their original language only 
 
 ## Run locally
 
-Requires Python 3.11+; production code has **no third-party Python dependencies**.
+Requires Python 3.11+; the core generator uses the standard library; optional persistent counting uses the pinned PostgreSQL driver in `requirements.txt`.
 
 ```sh
 python build_preview.py
@@ -68,4 +68,10 @@ This exercises profession specificity, Mandarin-to-English output, an actual bro
 
 See [Render deployment](docs/RENDER.md), [limitations](docs/LIMITATIONS.md), and [verification](docs/VERIFICATION.md). PR #1 is merged and this release is published on the existing services. See [deployment verification](docs/DEPLOYED.md) for the deployed commits, production checks and export-review hotfix.
 
-The older `server.py`, `public/`, `test_server.py` and `launch.py` preserve the earlier optional SQLite research dashboard. They are excluded from the current app's HTTP routes and deployment artifacts. No research database is created by this version.
+The older `server.py`, `public/`, `test_server.py` and `launch.py` preserve the earlier optional SQLite research dashboard. They are excluded from the current app's HTTP routes and deployment artifacts. No research database is created by this version. The separately reviewed `render-counts.yaml` option stores only aggregate dates and integers.
+
+## Anonymous generation counts
+
+`GET /api/stats` returns only total/today generation counts and a storage scope. A successful `/generate` response includes `generation_number` and the same count snapshot. Failed and clarification responses, refinements, and exports do not increment it. `generation_counts.py` is deliberately separate from AI/content processing.
+
+The default mode is process memory and is labelled accordingly in the UI. To retain counts across service restarts, review and approve `render-counts.yaml`, which adopts the existing free API service and connects a private free Postgres instance. The table stores only `generation_day` and `generated_count`. No names, sources, CVs, maps or visitor IDs are written. The free database expires after 30 days; export/migrate totals before then. This plan is prepared for review, not implicitly applied. The observer goal of 20 generations/day does not change the existing AI call limit.

@@ -4,3 +4,5 @@
 !build_preview.py
 !preview/
 !preview/**
+!generation_counts.py
+!requirements.txt

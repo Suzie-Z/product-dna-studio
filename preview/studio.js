@@ -3,9 +3,8 @@ const $=id=>document.getElementById(id);
 const API_ORIGIN=location.hostname==='product-dna-studio-preview.onrender.com'?'https://product-dna-studio-ai.onrender.com':'';
 const id=()=> 'src_'+crypto.randomUUID().replaceAll('-','');
 let sourceIds={story:id(),voice:id(),cv:id()},cvName='',reading=false,uploadRun=0,recognition=null,recording=false;
-let result=null,busy=false,controller=null,history=[],corrections=[],chat=[],pendingQuestion='',pendingRefinement='',dirty=false,editor=null;
-const events={};
-function event(name){if($('analytics-consent').checked)events[name]=(events[name]||0)+1}
+let result=null,busy=false,controller=null,history=[],corrections=[],chat=[],pendingQuestion='',pendingRefinement='',dirty=false,editor=null,generationNumber=null;
+function event(){} // No visitor-level analytics or client tracking.
 function sources(){return [
  {source_id:sourceIds.story,source_type:'typed_story',source_label:'Written story',content:$('story').value.trim()},
  {source_id:sourceIds.cv,source_type:'cv',source_label:cvName||'CV',content:cvName?$('cv-text').value.trim():''},
@@ -14,7 +13,7 @@ function sources(){return [
 function sourceLength(){return sources().reduce((n,s)=>n+s.content.length,0)}
 function status(text){$('input-status').textContent=text}
 function scrollToStep(which){$(which).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
-function showStudio(){$('studio').classList.remove('hidden');historyUrl();scrollToStep('step-one');$('story').focus({preventScroll:true});event('hero_cta_clicked')}
+function showStudio(){$('studio').classList.remove('hidden');historyUrl();scrollToStep('step-one');$('step-one').focus({preventScroll:true});event('hero_cta_clicked')}
 function historyUrl(){window.history.replaceState(null,'','#studio')}
 $('begin').onclick=showStudio;if(location.hash==='#studio')$('studio').classList.remove('hidden');
 function canGenerate(){return sources().some(s=>(s.content.match(/\p{L}/gu)||[]).length>=8)}
@@ -57,10 +56,10 @@ $('file').onchange=async e=>{
    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
    const doc=await pdfjsLib.getDocument({data:bytes}).promise;
    if(doc.numPages>15)throw Error('Use a PDF with 15 pages or fewer.');
-   for(let i=1;i<=doc.numPages;i++)text+='\n'+(await(await doc.getPage(i)).getTextContent()).items.map(x=>x.str).join(' ');
+   for(let i=1;i<=doc.numPages;i++)text+='\n'+(await(await doc.getPage(i)).getTextContent()).items.map(x=>x.str+(x.hasEOL?'\n':' ')).join('');
    await doc.destroy();
   }
-  if(run!==uploadRun)return;text=text.trim();
+  if(run!==uploadRun)return;text=text.normalize('NFKC').replace(/[\u00ad\u200b]/g,'').trim();
   if(text.length<12)throw Error('No readable text. Scanned PDFs need OCR; paste your story instead.');
   if(text.length>18000||text.length+sourceLength()>22000)throw Error('Shorten your CV and notes to 22,000 characters in total.');
   cvName=file.name.slice(0,150);$('cv-text').value=text;fileStatus(cvName+' · Ready');sourceChanged();status('');
@@ -118,12 +117,13 @@ async function generate(){
  if(data.map.status==='needs_more_info'){
   pendingQuestion=data.map.clarification_question;$('clarification-question').textContent=pendingQuestion;$('clarification').classList.remove('hidden');$('clarification-answer').focus();return;
  }
- result=data.map;history=[];chat=[];dirty=false;pendingQuestion='';pendingRefinement='';$('clarification').classList.add('hidden');renderResult();event('generation_succeeded');scrollToStep('result-panel');
+ result=data.map;generationNumber=data.generation_number??null;if(data.stats)showStats(data.stats);else loadStats();history=[];chat=[];dirty=false;pendingQuestion='';pendingRefinement='';$('clarification').classList.add('hidden');renderResult();event('generation_succeeded');scrollToStep('result-panel');
 }
 $('generate').onclick=generate;
 $('answer').onclick=async()=>{const answer=$('clarification-answer').value.trim();if(!answer){$('clarification-answer').focus();return}corrections.push({source_id:id(),source_type:'typed_story',source_label:'Follow-up answer',content:answer});$('clarification-answer').value='';await generate()};
 function renderResult(){
  if(!result)return;
+ $('generation-number').classList.toggle('hidden',!generationNumber);$('generation-number').textContent=generationNumber?'Generation #'+generationNumber:'';
  $('result-panel').classList.remove('hidden');$('step-three').classList.remove('hidden');$('review-line').classList.toggle('hidden',!dirty);$('review-confirm').checked=false;
  const alt=`Career DNA: ${result.career_signature}. ${result.journey_type==='chronological'?'Career journey':'Experience areas'}: ${result.journey.map(x=>x.label).join(', ')}. Strengths: ${result.strengths.map(x=>x.label).join(', ')}. ${result.superpower}`;
  $('poster').setAttribute('aria-label',alt);$('poster').textContent=alt;renderDNAPoster($('poster'),result,$('format').value);
@@ -157,7 +157,7 @@ $('update').onclick=async()=>{
 };
 $('undo').onclick=()=>{if(!history.length||busy)return;const old=history.pop();result=old.map;corrections=old.corrections;chat=old.chat;dirty=old.dirty;pendingRefinement='';$('direct-editor').classList.add('hidden');renderResult();$('refine-status').textContent='The last change was undone.'};
 $('edit-experience').onclick=()=>{scrollToStep('step-one');$('story').focus({preventScroll:true})};
-$('start-over').onclick=()=>{if(!confirm('Start over and clear your experience, map and edit history?'))return;if(recording)recognition.stop();for(const key of ['story','name','cv-text','voice-text','refinement','clarification-answer'])$(key).value='';result=null;history=[];corrections=[];chat=[];pendingQuestion='';pendingRefinement='';dirty=false;cvName='';sourceIds={story:id(),voice:id(),cv:id()};for(const key of ['cv-panel','voice-panel','step-two','step-three','result-panel','clarification','direct-editor'])$(key).classList.add('hidden');$('refine-consent').checked=false;status('');updateButtons();scrollToStep('step-one')};
+$('start-over').onclick=()=>{if(!confirm('Start over and clear your experience, map and edit history?'))return;if(recording)recognition.stop();for(const key of ['story','name','cv-text','voice-text','refinement','clarification-answer'])$(key).value='';result=null;generationNumber=null;history=[];corrections=[];chat=[];pendingQuestion='';pendingRefinement='';dirty=false;cvName='';sourceIds={story:id(),voice:id(),cv:id()};for(const key of ['cv-panel','voice-panel','step-two','step-three','result-panel','clarification','direct-editor'])$(key).classList.add('hidden');$('refine-consent').checked=false;status('');updateButtons();scrollToStep('step-one')};
 function openEditor(group,ident){
  if(busy)return;editor={group,id:ident};$('editor-fields').replaceChildren();$('editor-error').textContent='';
  const target=group==='signature'?result:result[group].find(x=>x.id===ident);const fields=group==='signature'?[['career_signature','Career signature',65],['superpower','Superpower',100]]:[['label','Title',group==='journey'?36:35],['description','Description',group==='journey'?80:95]];
@@ -168,7 +168,7 @@ function safeEnglish(value){return value.trim()&&!/[<>\u0000-\u0008]|[\p{Script=
 $('direct-editor').onsubmit=e=>{
  e.preventDefault();if(!result||busy)return;const draft=structuredClone(result),target=editor.group==='signature'?draft:draft[editor.group].find(x=>x.id===editor.id);
  for(const field of $('editor-fields').querySelectorAll('input,textarea')){const value=field.value.trim();if(!safeEnglish(value)){$('editor-error').textContent='Use English map text without markup or private contact details. Use chat for translation.';return}target[field.name]=value}
- if(editor.group==='signature'&&(!(target.career_signature.split(/\s+/).length>=2&&target.career_signature.split(/\s+/).length<=7)||!(target.superpower.split(/\s+/).length>=5&&target.superpower.split(/\s+/).length<=12))){$('editor-error').textContent='Use 2–7 words for your signature and 5–12 for your superpower.';return}
+ if(editor.group==='signature'&&(!(target.career_signature.split(/\s+/).length>=2&&target.career_signature.split(/\s+/).length<=7)||!(target.superpower.split(/\s+/).length>=3&&target.superpower.split(/\s+/).length<=12))){$('editor-error').textContent='Use 2–7 words for your signature and 3–12 for your superpower.';return}
  if(target.description&&target.description.split(/\s+/).length>12){$('editor-error').textContent='Keep the description to 12 words or fewer.';return}
  remember();if(editor.group==='strengths'){target.evidence_status='inferred';target.evidence_note='User-edited interpretation. Review against the linked source evidence.'}result=draft;dirty=true;$('direct-editor').classList.add('hidden');renderResult();$('refine-status').textContent='Preview updated locally. Review your edits before downloading.';
 };
@@ -183,3 +183,12 @@ $('save').onclick=async()=>{
  $('poster').toBlob(blob=>{if(!blob){$('save-status').textContent='Image export failed. Please try again.';return}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='my-career-dna.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);$('save-status').textContent='Your Career DNA image is ready.';event('export_downloaded')},'image/png');
 };
 updateButtons();
+
+function showStats(stats){
+ const scope=stats.scope==='process'?' · this server run':'';
+ $('usage-count').textContent=stats.total_generations+' maps created'+scope+' · '+stats.today_generations+' today';
+}
+async function loadStats(){try{const response=await fetch(API_ORIGIN+'/api/stats');if(!response.ok)throw Error();showStats(await response.json())}catch{$('usage-count').textContent='Generation count temporarily unavailable'}}
+document.addEventListener('keydown',e=>{if(e.key==='Tab')document.body.classList.add('keyboard-nav')});
+document.addEventListener('pointerdown',()=>document.body.classList.remove('keyboard-nav'));
+loadStats();

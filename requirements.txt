@@ -1,0 +1,2 @@
+# Only used when COUNTER_DATABASE_URL enables persistent anonymous counts.
+psycopg[binary]==3.3.8

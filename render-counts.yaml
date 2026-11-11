@@ -1,0 +1,25 @@
+# Review and approve separately. Stores dates and integer counts, never CV content.
+# Render Free Postgres expires 30 days after creation; no automatic paid upgrade.
+databases:
+  - name: career-dna-anonymous-counts
+    plan: free
+    region: singapore
+    databaseName: career_dna_counts
+    ipAllowList: []
+services:
+  - type: web
+    name: product-dna-studio-ai
+    runtime: python
+    plan: free
+    region: singapore
+    repo: https://github.com/Suzie-Z/product-dna-studio
+    branch: ai-experience
+    buildCommand: pip install -r requirements.txt && python build_preview.py && python -m compileall -q ai_server.py career_ai.py generation_counts.py
+    startCommand: python ai_server.py
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: COUNTER_DATABASE_URL
+        fromDatabase:
+          name: career-dna-anonymous-counts
+          property: connectionString

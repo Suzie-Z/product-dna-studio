@@ -116,6 +116,22 @@ class ContractTests(unittest.TestCase):
   with patch('career_ai.moderate'),patch('career_ai.structured',return_value={'english_only':True})as review:
    out=app.process_review({'sources':[SOURCE],'map':d,'context_consent':True})
    self.assertTrue(out['reviewed']);self.assertTrue(all(review.call_args.args[0]['export_review']))
+ def test_pdf_typography_does_not_break_evidence_grounding(self):
+  source={**SOURCE,'content':'I evaluated “model fit” across real-\nworld workflows and improved team’s API reliability.'}
+  data=make_map(1,1)
+  for item in data['journey']+data['strengths']:
+   item['evidence_quotes'][0]['quote']='I evaluated "model fit" across real-world workflows'
+  self.assertEqual(app.validate_map(data,[source])['status'],'ready')
+  data['strengths'][0]['evidence_quotes'][0]['quote']='I invented an award-winning model'
+  with self.assertRaises(ValueError):app.validate_map(data,[source])
+ def test_concise_superpower_is_not_rejected_for_padding(self):
+  data=make_map(1,1);data['superpower']='Building reliable systems'
+  self.assertEqual(app.validate_map(data,[SOURCE])['status'],'ready')
+ def test_repair_includes_targeted_issue_and_previous_draft(self):
+  bad=make_map(1,1);bad['superpower']='Two words'
+  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[bad,make_map(1,1)])as model:
+   response=app.process_generate({'sources':[SOURCE]})
+   feedback=model.call_args.args[0]['validation_feedback'];self.assertIn('/superpower',feedback['issue']);self.assertIn('previous_draft',model.call_args.args[0]);self.assertEqual(response['map']['status'],'ready')
  def test_input_validation(self):
   for sources in [[],[SOURCE,SOURCE],[{**SOURCE,'content':'a'*22001}],[{**SOURCE,'source_type':'executable'}]]:
    with self.assertRaises(app.AppError):app.sources_from_request(sources)
