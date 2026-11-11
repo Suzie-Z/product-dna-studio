@@ -47,6 +47,12 @@ class Architecture(unittest.TestCase):
   from tools.benchmark_pm_models import estimated_cost
   sample=[{'model':'gpt-6.1-sol','usage':{'input_tokens':3000,'input_tokens_details':{'cached_tokens':1000,'cache_write_tokens':1000},'output_tokens':500}}]
   self.assertEqual(estimated_cost(sample),.0096)
+ def test_pure_visual_changes_preserve_all_facts_without_model_call(self):
+  for message,patch_value in [('Change only the background to blue',{'theme_id':'sky_blue'}),('把背景换成绿色',{'theme_id':'mint_green'}),('Use another character',{'next_neutral_avatar':True})]:
+   before=make_map(1,1)
+   with patch('career_ai.provider')as provider:
+    out=career_ai.process_refine({'sources':[SOURCE],'previous':before,'message':message,'context_consent':True})
+   provider.assert_not_called();self.assertEqual(out['map'],before);self.assertEqual(out['presentation_patch'],patch_value);self.assertEqual(out['changed_fields'],[])
  def test_model_priority_and_private_diagnostics(self):
   self.assertEqual(model_config.career_model(),'legacy-model')
   with patch.dict(os.environ,{'OPENAI_CAREER_MODEL':'separate-career-model','OPENAI_API_KEY':'never-print-this-secret'}):

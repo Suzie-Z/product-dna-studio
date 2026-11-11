@@ -60,6 +60,7 @@ class CompleteFlow(unittest.TestCase):
   page.locator('#undo').click();page.wait_for_function('activeVersion?.number===1&&!busy');self.assertEqual(page.evaluate('result'),before)
   page.locator('#version-select').select_option('2');page.wait_for_function('activeVersion?.number===2&&!busy');self.assertEqual(page.evaluate('result'),after)
   page.locator('#version-select').select_option('1');page.wait_for_function('activeVersion?.number===1&&!busy');page.locator('#story').fill('Rename only the first capability to Applied Discovery.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===3&&!busy');self.assertEqual(page.evaluate('activeVersion.parent_id'),1)
+  content=page.evaluate('structuredClone(result)');colour='green'if variant['theme_id']=='sky_blue'else'blue';theme='mint_green'if colour=='green'else'sky_blue';page.locator('#story').fill('Change only the background to '+colour);page.locator('#generate').click();page.wait_for_function('activeVersion?.number===4&&!busy');self.assertEqual(page.evaluate('renderVariant.theme_id'),theme);self.assertEqual(page.evaluate('result'),content);page.locator('#undo').click();page.wait_for_function('activeVersion?.number===3&&!busy');self.assertEqual(page.evaluate('renderVariant'),variant)
   with page.expect_download()as event:page.locator('#save').click()
   file=ART/'career-export.png';event.value.save_as(str(file));self.assertEqual(event.value.suggested_filename,'my-pm-career-dna.png')
   from PIL import Image

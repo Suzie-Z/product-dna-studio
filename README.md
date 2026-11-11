@@ -49,7 +49,7 @@ The existing free Postgres expiry still applies. No paid plan was introduced. Ap
 python -m unittest test_ai tests.test_e2e tests.test_counts tests.test_session_architecture -v
 ```
 
-The72 automated tests use the real HTTP boundary with only model transport mocked. They cover truthful prior-role labels, provenance, unified input, PDF/DOCX parsing, speech pause/resume/fallback, targeted updates and unrelated-field preservation, restoration/branch revisions, failure/retry state, count eligibility and idempotency, model configuration, typography, real foreground bounds, layouts and one PNG.
+The73 automated tests use the real HTTP boundary with only model transport mocked. They cover truthful prior-role labels, provenance, unified input, PDF/DOCX parsing, speech pause/resume/fallback, targeted updates and unrelated-field preservation, restoration/branch revisions, failure/retry state, count eligibility and idempotency, model configuration, typography, real foreground bounds, layouts and one PNG.
 
 For opt-in real-project benchmarks, use `tools/benchmark_pm_models.py` with the deployment's test-token file (never an OpenAI key). It checks active-project model access, five synthetic PM profiles, role truthfulness, English/schema/evidence, latency, token-based cost estimates and test exclusion. Production observations and remaining limitations are recorded in DEPLOYED.md, not inferred from mock tests.
 

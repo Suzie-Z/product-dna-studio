@@ -260,7 +260,7 @@ def structured(payload,schema,prompt):
  reserve_attempt()
  request={'model':career_model(),'store':False,'max_output_tokens':8500,'reasoning':{'effort':'medium'if 'PM DNA editorial standard'in prompt else'low'},'input':[{'role':'system','content':prompt},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],'text':{'format':{'type':'json_schema','name':'career_dna','schema':schema,'strict':True}}}
  started=time.monotonic();response=provider('responses',request,110)
- if USAGE.get()is not None:USAGE.get().append({'model':request['model'],'seconds':round(time.monotonic()-started,2),'usage':response.get('usage',{})})
+ if USAGE.get()is not None:USAGE.get().append({'model':request['model'],'provider_model':response.get('model',request['model']),'seconds':round(time.monotonic()-started,2),'usage':response.get('usage',{})})
  try:
   if response.get('status')!='completed':raise ValueError('incomplete response')
   parts=[p for item in response.get('output',[])if item.get('type')=='message'for p in item.get('content',[])]
@@ -352,6 +352,14 @@ def process_generate(body):
  failure.validation_issue=last_issue # Safe rule/field path only, no submitted text or model copy.
  raise failure
 
+def visual_preference(message):
+ colours={'blue':'sky_blue','green':'mint_green','mint green':'mint_green','yellow':'warm_yellow','peach':'peach_coral','coral':'peach_coral','teal':'teal_sage','sage':'teal_sage','lilac':'lilac_light','purple':'lilac_light','蓝色':'sky_blue','绿色':'mint_green','黄色':'warm_yellow','桃色':'peach_coral','青色':'teal_sage','紫色':'lilac_light'}
+ match=re.fullmatch(r'(?:please\s+)?(?:change|switch|set|make)\s+(?:only\s+)?(?:the\s+)?(?:background|theme|colou?r(?: scheme)?)\s+(?:(?:to|into)\s+)?(?:soft\s+|light\s+)?(blue|mint green|green|yellow|peach|coral|teal|sage|lilac|purple)(?:\s+only)?[.!]?\s*',message.strip(),re.I)
+ if not match:match=re.fullmatch(r'(?:请)?(?:把|将)?(?:背景|配色|主题)(?:改|换|设)(?:成|为)(蓝色|绿色|黄色|桃色|青色|紫色)[。！]?',message.strip())
+ if match:return {'theme_id':colours[match.group(1).lower()]}
+ if re.fullmatch(r'(?:please )?(?:change|replace|switch) (?:the )?(?:avatar|character)(?: only)?[.!]?|(?:please )?use (?:another|a different) (?:avatar|character)[.!]?|(?:请)?换(?:一个)?(?:小人|角色)[。！]?',message.strip(),re.I):return {'next_neutral_avatar':True}
+ return None
+
 def process_refine(body):
  if body.get('context_consent')is not True:raise AppError(400,'Allow your experience to be resent before updating your map.','consent_required')
  sources=sources_from_request(body.get('sources'));message=body.get('message')
@@ -359,6 +367,8 @@ def process_refine(body):
  try:previous=validate_map(body.get('previous'),sources,allow_pending=True)
  except (ValueError,TypeError,AttributeError,KeyError):raise AppError(400,'Your previous map needs to be regenerated.','invalid_previous')
  if previous['status']!='ready':raise AppError(400,'Generate your first map before refining it.','no_previous')
+ presentation=visual_preference(message)
+ if presentation:return {'map':previous,'changed_fields':[],'change_summary':'Updated the visual presentation; career content is unchanged.','accepted_source':None,'presentation_patch':presentation,'visual_only':True}
  if CREDENTIAL.search(message)and REQUEST_CLAIM.search(message)and not re.search(r'\b(?:remove|delete|omit|correct)\b|删除|去掉|纠正',message,re.I)and not has_credential_evidence(sources):
   return {'map':clarification('What qualification and relevant experience support that credential?'),'change_summary':'That credential needs supporting evidence. Your existing map is unchanged.','accepted_source':None}
  correction={'source_id':'src_'+secrets.token_hex(8),'source_type':'typed_story','source_label':'User correction','content':clean_source(message.strip())}
