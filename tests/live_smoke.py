@@ -33,13 +33,13 @@ try:
   original=record('Mandarin engineer: real browser generation and English output',generation)
   def regeneration():
    page.locator('#story').fill(engineer+' 重点突出可靠性工作和文档，不要添加管理经历。')
-   page.locator('#generate').click();page.wait_for_function("!document.querySelector('#result-panel').classList.contains('hidden')&&document.querySelector('#poster').renderMetrics?.ok",timeout=240000)
+   page.locator('#generate').click();page.wait_for_function("!document.querySelector('#result-panel').classList.contains('hidden')&&exportCanvas.renderMetrics?.ok",timeout=240000)
    d=page.evaluate('structuredClone(result)');assert d['output_language']=='en'
    assert not any(w in d['career_signature'].lower()for w in ['manager','leader','chief']);return d
   updated=record('Original-input regeneration with Chinese requirements',regeneration)
   def export():
    with page.expect_download(timeout=30000)as event:page.locator('#save').click()
-   event.value.save_as(str(ART/'real-career-dna.png'));assert page.locator('#poster').evaluate('(c)=>c.renderMetrics.ok');page.locator('#map-visual').screenshot(path=str(ART/'real-career-preview.png'))
+   event.value.save_as(str(ART/'real-career-dna.png'));assert page.evaluate('exportCanvas.renderMetrics.ok');page.locator('#map-visual').screenshot(path=str(ART/'real-career-preview.png'))
   record('Real result: high-resolution PNG download',export)
   current_sources=page.evaluate('sources()')
   def unsupported():

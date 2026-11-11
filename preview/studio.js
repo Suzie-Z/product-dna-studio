@@ -1,5 +1,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
+// Export surface is never attached to the page, so CSS cannot reveal a second map.
+const exportCanvas=document.createElement('canvas');
 const API_ORIGIN=location.hostname==='product-dna-studio-preview.onrender.com'?'https://product-dna-studio-ai.onrender.com':'';
 const id=()=> 'src_'+crypto.randomUUID().replaceAll('-','');
 let sourceIds={story:id(),voice:id(),cv:id()},cvName='',reading=false,uploadRun=0,recognition=null,recording=false;
@@ -133,15 +135,15 @@ async function renderResult(){
  const original=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Original experience';original.append(summary);
  for(const source of sources()){const heading=document.createElement('h5'),content=document.createElement('p');heading.textContent=source.source_label;content.textContent=source.content;content.className='original-context';original.append(heading,content)}
  $('journey-evidence').append(original);
- try{await renderDNAPoster($('poster'),result)}catch{$('save-status').textContent='The image could not render. Try generating again.'}
+ try{await renderDNAPoster(exportCanvas,result)}catch{$('save-status').textContent='The image could not render. Try generating again.'}
 }
 $('save').onclick=async()=>{
  if(!result||busy)return;
  busy=true;updateButtons();$('save-status').textContent='Preparing your image…';
  try{
-  const drawing=await renderDNAPoster($('poster'),result);
+  const drawing=await renderDNAPoster(exportCanvas,result);
   if(!drawing.ok)throw Error('Some wording is too long. Adjust your story and generate again.');
-  const blob=await new Promise(resolve=>$('poster').toBlob(resolve,'image/png'));
+  const blob=await new Promise(resolve=>exportCanvas.toBlob(resolve,'image/png'));
   if(!blob)throw Error('Image export failed. Please try again.');
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='my-career-dna.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);$('save-status').textContent='Your Career DNA image is ready.';
  }catch(e){$('save-status').textContent=e.message}finally{busy=false;updateButtons()}
