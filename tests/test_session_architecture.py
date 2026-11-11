@@ -64,6 +64,9 @@ class Architecture(unittest.TestCase):
    self.assertEqual(self.post('/api/career-dna/generate',{'next_version':-1})[0],400);generate.assert_not_called()
    code,value=self.post('/api/career-dna/generate',{'benchmark_model':'expensive-unapproved-model','request_id':'req_override_0123456789'})
    self.assertEqual(code,200);self.assertEqual(value['model'],'legacy-model')
+ def test_multilingual_actual_pm_titles_pass_scope_without_english_titles(self):
+  for content in ['Soy gerente de producto y priorizo requisitos con clientes.','Je suis chef de produit et je définis les priorités.','Ich bin Produktmanager und priorisiere Kundenanforderungen.','Sou gerente de produto e priorizo requisitos.','私はプロダクトマネージャーです。','저는 프로덕트 매니저입니다.','أنا مدير منتج وأحدد الأولويات.']:
+   self.assertTrue(career_ai.has_pm_context([{**SOURCE,'content':content}]),content)
  def test_prior_roles_are_not_relabeled_as_pm_and_transition_requires_evidence(self):
   src={**SOURCE,'content':'I am a platform product manager. Previously I was a software engineer who built API services and reviewed reliability constraints.'};m=make_map(1,1);m['journey'][0]['label']='Software Engineer'
   for item in m['journey']+m['strengths']:

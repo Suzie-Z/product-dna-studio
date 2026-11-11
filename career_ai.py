@@ -307,7 +307,7 @@ def generation_schema(sources):
    if group=='journey':item[field]['minItems']=1
  return schema
 
-PM_TITLE=re.compile(r'\b(?:product\s+(?:manager|owner|lead)|(?:growth|platform|operations|ai|data|technical|consumer|enterprise|b2b|commerce|marketplace|monetization|content|generalist)\s+pm|growth\s+hacker)\b|产品经理|产品负责人|产品owner',re.I)
+PM_TITLE=re.compile(r'\b(?:product\s+(?:manager|owner|lead)|(?:growth|platform|operations|ai|data|technical|consumer|enterprise|b2b|commerce|marketplace|monetization|content|generalist)\s+pm|growth\s+hacker)\b|产品经理|产品负责人|产品owner|\b(?:gerente de producto|gestor de produto|gerente de produto|chef de produit|responsable produit|produktmanager(?:in)?)\b|プロダクトマネージャー|프로덕트 매니저|제품 관리자|مدير المنتجات|مدير منتج|quản lý sản phẩm|продуктовый менеджер',re.I)
 def has_pm_transition(sources):
  content=' '.join(s['content']for s in sources)
  intent=re.search(r'transition(?:ing)? (?:to|into) (?:product|pm)|moving (?:to|into) product|转型.{0,8}产品|从.{0,12}转.{0,6}产品',content,re.I)

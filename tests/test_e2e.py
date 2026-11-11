@@ -42,6 +42,9 @@ class CompleteFlow(unittest.TestCase):
  @classmethod
  def tearDownClass(cls):
   cls.browser.close();cls.p.stop();cls.server.shutdown();cls.server.server_close();cls.provider.stop();cls.env.stop()
+ def setUp(self):
+  # Each browser case is independent; the shared localhost transport has one IP.
+  ai_server.RECENT.clear()
  def page(self,width=1440):
   context=self.browser.new_context(extra_http_headers={'X-PM-Internal-Test':'test-internal-only'},viewport={'width':width,'height':1000});context.route('https://fonts.googleapis.com/**',lambda r:r.abort());context.route('https://fonts.gstatic.com/**',lambda r:r.abort());page=context.new_page();page.goto(self.url);page.evaluate('pmFontsReady');page.locator('#begin').click();return page,context
  def test_complete_flow(self):
@@ -74,10 +77,11 @@ class CompleteFlow(unittest.TestCase):
   seen=[]
   def intercept(route):
    seen.append(route.request.post_data_json)
-   if len(seen)==1:route.fulfill(status=502,content_type='application/json',body=json.dumps({'error':'Temporary model failure.'}))
+   if len(seen)in [1,3]:route.fulfill(status=502,content_type='application/json',body=json.dumps({'error':'Temporary model failure.'}))
    else:route.continue_()
   context.route('**/api/career-dna/refine',intercept);page.locator('#story').fill('Rename the first capability to Applied Discovery.');page.locator('#generate').click();page.locator('#retry').wait_for(state='visible');self.assertEqual(page.evaluate('result'),before);self.assertEqual(page.evaluate('versions.length'),1);self.assertIn('Rename',page.locator('#story').input_value())
-  page.locator('#retry').click();page.wait_for_function('activeVersion?.number===2&&!busy');self.assertEqual(seen[0]['request_id'],seen[1]['request_id']);self.assertEqual(page.evaluate('versions.length'),2);context.close()
+  page.locator('#retry').click();page.wait_for_function('activeVersion?.number===2&&!busy');self.assertEqual(seen[0]['request_id'],seen[1]['request_id']);self.assertEqual(page.evaluate('versions.length'),2)
+  page.locator('#story').fill('Shorten only the first capability title to Applied Discovery.');page.locator('#generate').click();page.locator('#retry').wait_for(state='visible');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===3&&!busy');self.assertEqual(seen[2]['request_id'],seen[3]['request_id']);context.close()
  def test_local_rounded_fonts_match_measurement_and_export(self):
   page,context=self.page()
   details=page.evaluate("""()=>{const ctx=document.createElement('canvas').getContext('2d');ctx.fontKerning='none';return Object.entries(PM_DNA_FONTS).map(([kind,f])=>{const sample='Scalable Platform Design',s=30;ctx.font=`600 ${s}px ${f.family}`;const measured=ctx.measureText(sample).width,outline=[...sample].reduce((n,ch)=>n+f.glyphs[ch].advance,0)*s/f.units;ctx.font='600 30px Arial';return {loaded:document.fonts.check(`600 30px ${f.family}`),difference:Math.abs(measured-outline),distinct:Math.abs(measured-ctx.measureText(sample).width)>1}})}""")

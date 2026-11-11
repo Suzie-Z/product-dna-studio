@@ -79,7 +79,7 @@ async function run(kind,body){
 $('cancel').onclick=()=>controller?.abort();
 async function generate(retry=false){
  if(busy||reading||(!retry&&!canGenerate()))return;busy=true;updateButtons();await finishVoice();busy=false;
- let work=retry?pendingRequest:null;
+ let work=pendingRequest;
  if(!work){
   const kind=activeVersion?'refine':'generate',src=activeVersion?clone(activeVersion.sources):initialSources();
   if(activeVersion&&cvText&&!src.some(s=>s.source_id===cvId))src.push({source_id:cvId,source_type:'cv',source_label:cvName,content:cvText});

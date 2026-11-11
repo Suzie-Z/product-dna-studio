@@ -36,7 +36,9 @@ A restricted storage self-test verifies real PostgreSQL increment/deduplication 
 
 ## Validation
 
-73 automated tests cover the unified input, parser fallback, voice API pause/resume, targeted changes, versions/branch restoration, retry identity, preserved state on errors, public-vs-test counting, durable receipt semantics, model configuration/authentication, actual prior roles, provenance and existing map typography/collision/PNG checks. Real provider model access, five-profile benchmark, API cost estimates and the live browser flow are recorded after rollout. Model inference still requires editorial review; literal quotes prove provenance, not exhaustive semantic correctness.
+74 automated tests cover the unified input, parser fallback, voice API pause/resume, targeted changes, versions/branch restoration, retry identity, preserved state on errors, public-vs-test counting, durable receipt semantics, model configuration/authentication, actual prior roles, provenance and existing map typography/collision/PNG checks. Real provider model access, five-profile benchmark, API cost estimates and the live browser flow are recorded after rollout. Model inference still requires editorial review; literal quotes prove provenance, not exhaustive semantic correctness.
 
 
 Pure recognised theme/neutral-character requests take a deterministic visual-only path: career facts are copied unchanged, no career model is called, and no public creation count is added. The new presentation is versioned and can be undone. Mixed content/visual requests or arbitrary layout changes are not silently reinterpreted as permission to invent career capabilities.
+
+The scope prefilter also recognises common actual PM titles in Spanish, Portuguese, French, German, Japanese, Korean, Arabic, Vietnamese and Russian, rather than requiring English titles in multilingual CVs. The model still assesses factual scope. Both Retry and the primary generation action reuse the pending logical request identifier until input changes.
