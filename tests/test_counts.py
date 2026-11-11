@@ -2,7 +2,7 @@ import os,threading,unittest
 from unittest.mock import patch
 import generation_counts as c
 class Counts(unittest.TestCase):
- def setUp(self):c._DAYS.clear();self.env=patch.dict(os.environ,{'COUNTER_DATABASE_URL':''});self.env.start()
+ def setUp(self):c._DAYS.clear();c._RECEIPTS.clear();c._START=None;self.env=patch.dict(os.environ,{'COUNTER_DATABASE_URL':''});self.env.start()
  def tearDown(self):self.env.stop()
  def test_only_integer_aggregates_and_date_are_retained(self):
   self.assertEqual(c.snapshot()['total_generations'],0)

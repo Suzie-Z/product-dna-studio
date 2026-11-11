@@ -84,3 +84,10 @@ Prefer 2–3 complementary concrete practices when the source contains that many
 - Did rich evidence yield 2–3 concrete complementary practices instead of a single vague label?
 - Can every role highlight and practice be traced to its own original quote? Would the same copy fit almost any PM? Rewrite generic copy using the strongest available evidence.
 - Are the short phrases complete and natural, with no clipping, jargon pile-up, shorthand rating or unsupported professional upgrade?
+
+
+## PM transition and incremental revision
+
+This product targets PMs and concrete PM transitions, not generic career coaching. Keep prior engineering, consulting, data or operations roles truthful under their approved prior-role labels; never turn them into PM jobs. Infer transferable product capabilities cautiously from demonstrated work and mark inferred versus supported. Consolidate overlapping capabilities rather than filling four categories.
+
+For an update, use original sources plus the selected existing map and the latest instruction. Preserve unrelated content, IDs and factual scope. Retain visual configuration unless a supported visual preference was requested. A title rewrite or emphasis change is not new evidence. Ask one focused question when a correction conflicts with important facts or an asserted skill lacks evidence.

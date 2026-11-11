@@ -100,7 +100,7 @@ function build(data,mobile=false,variant){
  return {svg:parts.join(''),metrics:{ok:!issues.length,issues,boxes,foreground,collisions,width:W,height:H,theme_id:theme.id,avatar_id:'pm_avatar_'+String(avatar+1).padStart(2,'0'),oneResult:true,fontsLoaded,headingFont:fonts.heading.family,bodyFont:fonts.body.family}};
 }
 window.buildDNAScene=build;
-let current=null;const query=matchMedia('(max-width:700px)');
+let current=null;window.clearDNAMap=()=>{current=null};const query=matchMedia('(max-width:700px)');
 window.renderDNAMap=(target,data,variant)=>{current={target,data,variant};const scene=build(data,query.matches,variant);target.innerHTML=scene.svg;target.dataset.layout=query.matches?'mobile':'desktop';target.renderMetrics=scene.metrics;return scene.metrics};
 query.addEventListener('change',()=>{if(current)window.renderDNAMap(current.target,current.data,current.variant)});
 function outlineText(svg){

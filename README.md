@@ -1,83 +1,56 @@
 # PM Career DNA
 
-Current integrated release: see [PM_IMPLEMENTATION.md](docs/PM_IMPLEMENTATION.md). PM-only scope, PM branding/logo, six background themes, 24 avatar/icon libraries, stable per-result variants and single-image export are implemented.
-
-
-An evidence-grounded PM journey and capability map for internet/technology product managers. This upgrades the existing illustrated experience in place: lavender/cream/teal surfaces, soft cards, illustrated professional icons, and one of 24 neutral human chibi avatars with uniform cartoon skin material.
+An enhancement of the existing illustrated app: PM career intelligence, deterministic visuals and session-only conversational refinement. See [architecture and privacy](docs/CAREER_STUDIO_ARCHITECTURE.md), [visual acceptance standard](docs/PM_DNA_DELIVERY_STANDARD.md) and [observed live deployment](docs/DEPLOYED.md).
 
 ## Experience
 
-1. **Share Your PM Journey** — one CV (PDF/DOCX/TXT), editable voice transcript, and written notes in a combined workspace. Source IDs remain stable during the session. Common contact details are redacted server-side before model processing.
-2. **Discover Your PM Career DNA** — real structured OpenAI generation with **1–4 evidenced PM role types and 1–4 transferable capabilities independently**, signature, superpower, and evidence links. Sparse or conflicting evidence prompts one question instead of filling slots. Undated material is shown as **Experience Areas**.
-3. **Download PNG** — one fixed high-resolution landscape map. To request changes, return to the original story input, add context or preferences, and generate again. There is no separate refinement form, manual map editor, format chooser, or third step.
+1. Existing landing page → **Explore My Career DNA** → **Explore My PM Career**.
+2. Upload a PDF/DOCX/TXT CV or use one editable text/voice composer. Uploads show filename/checkmark, removal and replacement, without a full CV preview. Legacy binary DOC and scanned PDFs require conversion/OCR.
+3. **Generate** one English map. Evidence-backed role highlights lead to a maximum of four differentiated capabilities. Actual prior engineering/consulting roles remain truthful.
+4. Return to the same composer → **Update My DNA Map**. Targeted changes preserve unrelated facts, IDs and visual configuration. Version selection and Undo restore earlier results; refining an older version creates a new branch revision.
+5. Download one rounded-font landscape PNG. Maps, sources and up to30 versions remain only in browser/session and short-lived request memory, not a personal-data database. Refresh clears the browser history.
 
-All exported text is English. Evidence quotes retain their source language internally. Exported visible graphics contain no raw quotes, source IDs, ratings, or contact details. Each illustrated category has a noneditable SVG tooltip with a brief English evidence explanation; no raw quotes are placed in the SVG. No generated likeness or inferred physical attributes are used.
-
-## Run locally
-
-Requires Python 3.11+; the core generator uses the standard library; optional persistent counting uses the pinned PostgreSQL driver in `requirements.txt`.
+## Run
 
 ```sh
+pip install -r requirements.txt
 python build_preview.py
-# Set OPENAI_API_KEY securely in your process environment. Do not paste it into
-# code, shell history, tracked files, screenshots, or chat.
 python ai_server.py
 ```
 
-Open `http://localhost:10000`. The API remains healthy without a key, but model generation returns an explicit configuration message. Very sparse input can receive a local clarification without a model call. Configuration keys are documented in `.env.example`; it is not automatically loaded.
+Set API credentials through server environment settings. The server binds to `0.0.0.0:$PORT` (default10000). `OPENAI_CAREER_MODEL` takes precedence over legacy `OPENAI_MODEL`; fallback is `gpt-5-mini`. Never infer the deployed model from a default: `/health` reports the effective non-secret selection. The renderer uses local assets and SVG; there is no per-map image-model request.
 
-## Source and API
+The existing Render services and private counter database are retained. No new hosting resources are required. The source is a public Git URL and uses explicit deploys after tested pushes. Do not apply historical Blueprints automatically or overwrite the existing key/model/quota/database variables. See [Render notes](docs/RENDER.md).
 
-- `career_ai.py`: schema, prompts, source redaction, moderation, grounding and refinement merge.
-- `ai_server.py`: bounded JSON HTTP/CORS boundary and concurrency/rate controls.
-- `preview/studio.template.html`, `studio.css`, `studio.js`: maintainable frontend sources.
-- `skills/pm-dna-editorial/SKILL.md`: runtime-loaded editorial standard for distinctive decision-value copy and individually evidenced method labels.
-- `preview/poster.js`: one controlled SVG scene with collision checks, responsive layouts, illustrated rocky islands, 24 PM icons and 24 neutral avatars, and single landscape PNG export (3200×2100, or 3200×2180 with dates). User copy is XML-escaped; overlong text blocks download rather than clipping.
-- `build_preview.py`: emits a self-contained `preview/index.html`, compatible with the current static host.
+## Components
 
-Always rebuild the bundled HTML after frontend edits and commit source plus bundle.
+- `career_ai.py`: bounded schema, PM/transition interpretation, moderation, literal provenance and allowlisted refinement merge.
+- `model_config.py`: separate career-model selection, token/latency observations and authenticated access diagnostics.
+- `request_state.py`: five-minute request-memory replay, conflict/concurrent-request protection and timed content eviction.
+- `generation_counts.py`: v2 production aggregates and expiring anonymous random-request receipts. Historical counts are preserved as unverified legacy totals.
+- `preview/studio.js`: unified composer, browser file parsing/speech controls, session documents/version branches, retries and one detached export canvas.
+- `preview/poster.js`, `pm-fonts.js`, `pm-library.js`: reference-style SVG, local rounded typography, exact glyph-outline PNG export, six themes and24 avatars/icons.
+- `skills/pm-dna-editorial/SKILL.md`: runtime-loaded editorial requirements for challenge, judgement, specific practice and evidence.
+- `build_preview.py`: self-contained committed HTML; the existing static host needs no extra asset-serving configuration. Font/illustration assets make it approximately12 MB.
 
-Endpoints:
+## API and counting
 
-- `POST /api/career-dna/generate`: `{sources, clarification_context?}` → `{map, change_summary, accepted_source}`.
-- Legacy API (not exposed in the current UI), `POST /api/career-dna/refine`: `{sources, previous, message, clarification_context?, context_consent:true}` → complete map plus a change summary. Existing fields are merged only through declared allowlisted paths, so undeclared model drift is discarded. Stable IDs are preserved.
-- Legacy API (not exposed in the current UI), `POST /api/career-dna/review`: `{sources,map,context_consent:true}` → consented evidence/safety and per-field English-language review for locally edited results.
-- `GET /health`: readiness and key-presence metadata only; no secret values.
+Initial `/api/career-dna/generate` requests carry a random `request_id`. Refinements carry sources, selected structured map, `map_version`, `next_version`, instruction, context consent and a new request ID. Only declared changed fields are merged. Public requests cannot choose arbitrary benchmark models.
 
-Sources use `{source_id, source_type: cv|voice_transcript|typed_story, source_label, content}`. Only text crosses the API; raw uploaded files are parsed client-side and are never handled by the server. Reference IDs and literal quote provenance are independently validated. This validates provenance, not objective truth of a career claim; users still need to review the interpretation.
+`PUBLIC_COUNTER_ENV=production` enables counting on the real API only. `PM_INTERNAL_TEST_TOKEN` identifies authorised synthetic tests and protects model/counter diagnostics; it is not embedded in the frontend. Duplicate logical requests replay temporary cached results and durable counter receipts prevent recounting after a restart. Only successful initial creations count; refinements, failures, clarifications, downloads and identified tests do not.
 
-## Validation
+The old23-count aggregate included internal testing and cannot be reliably split. It is not reset or presented as genuine users. V2 starts a labelled new tracking period with a separate table. The database retains date/integer counts, start metadata and hashes of random request IDs/ordinals/timestamps for deduplication, never CVs or maps. Receipts expire after48 hours and are removed on the next counter access. Anonymous counts are not unique people and cannot independently identify undisclosed manual tests or bots.
 
-Install test-only packages and Chromium using the official package/browser sources:
+The existing free Postgres expiry still applies. No paid plan was introduced. App processing is temporary; OpenAI and browser speech-provider retention policies are disclosed separately. `store:false` does not mean zero provider abuse-monitoring retention.
 
-```sh
-python -m pip install -r requirements-dev.txt
-python -m playwright install chromium
-python -m unittest test_ai tests.test_e2e -v
-node --check preview/studio.js
-node --check preview/poster.js
-```
-
-The browser suite launches the real HTTP app with **only the OpenAI transport mocked**. It covers clarification, generation, original-input regeneration, actual PNG download, editable CV inputs, normal PDF/DOCX parsing, mixed-language input, microphone fallback, mobile layout, XML escaping and overflow. All 32 combinations of 1–4 journey nodes, 1–4 strengths and desktop/mobile layouts are checked. Backend tests retain coverage of the legacy stateless refinement endpoints, which are not exposed in the simplified UI. Parser tests fetch version-pinned libraries from cdnjs into ignored `work/` test assets, using verified HTTPS.
-
-Opt-in real-provider tests (billable) use a securely configured `OPENAI_API_KEY`, or an echo-disabled in-memory prompt:
+## Verification
 
 ```sh
-python tests/live_smoke.py
+python -m unittest test_ai tests.test_e2e tests.test_counts tests.test_session_architecture -v
 ```
 
-This exercises profession specificity, Mandarin-to-English output, original-input regeneration, real PNG export, unsupported credentials and document injection. It has a ten-call safety cap per test process, including repair attempts. It never prints or saves the key. Artifacts go into ignored `work/`.
+The70 automated tests use the real HTTP boundary with only model transport mocked. They cover truthful prior-role labels, provenance, unified input, PDF/DOCX parsing, speech pause/resume/fallback, targeted updates and unrelated-field preservation, restoration/branch revisions, failure/retry state, count eligibility and idempotency, model configuration, typography, real foreground bounds, layouts and one PNG.
 
-## Release
+For opt-in real-project benchmarks, use `tools/benchmark_pm_models.py` with the deployment's test-token file (never an OpenAI key). It checks active-project model access, five synthetic PM profiles, role truthfulness, English/schema/evidence, latency, token-based cost estimates and test exclusion. Production observations and remaining limitations are recorded in DEPLOYED.md, not inferred from mock tests.
 
-See [Render deployment](docs/RENDER.md), [limitations](docs/LIMITATIONS.md), and [verification](docs/VERIFICATION.md). PR #1 is merged and this release is published on the existing services. See [deployment verification](docs/DEPLOYED.md) for the deployed commits, production checks and export-review hotfix.
-
-The older `server.py`, `public/`, `test_server.py` and `launch.py` preserve the earlier optional SQLite research dashboard. They are excluded from the current app's HTTP routes and deployment artifacts. No research database is created by this version. The separately reviewed `render-counts.yaml` option stores only aggregate dates and integers.
-
-## Anonymous generation counts
-
-`GET /api/stats` returns only total/today generation counts and a storage scope. A successful `/generate` response includes `generation_number` and the same count snapshot. Failed and clarification responses, refinements, and exports do not increment it. `generation_counts.py` is deliberately separate from AI/content processing.
-
-The default mode is process memory and is labelled accordingly in the UI. To retain counts across service restarts, review and approve `render-counts.yaml`, which adopts the existing free API service and connects a private free Postgres instance. The table stores only `generation_day` and `generated_count`. No names, sources, CVs, maps or visitor IDs are written. The free database expires after 30 days; export/migrate totals before then. The live API currently reports persistent counting; this release preserves its existing connection without provisioning new resources. The observer goal of 20 generations/day does not change the existing AI call limit.
-
-The latest [reference-fidelity correction](docs/VISUAL_FIDELITY.md) uses a local illustrated atlas, one responsive map root, and read-only View Full Journey. It preserves the original two-band illustrated world without generating two alternatives.
+The historical optional research dashboard (`server.py`, `public/`, `launch.py`) remains outside this app's routes and deployment artifacts. It is not a new personal-data backend.
