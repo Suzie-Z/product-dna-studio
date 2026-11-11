@@ -26,3 +26,5 @@
 .career-map{padding:0;background:transparent;border:0;box-shadow:none;border-radius:28px;overflow:hidden}.career-map>svg{display:block;width:100%;height:auto}.full-journey{margin:15px 0 0;color:#77518c;font-size:13px}.full-journey>summary{cursor:pointer;text-align:center;padding:10px;list-style-position:inside}.full-journey[open]{border:1px solid #e6d9f3;border-radius:18px;padding:15px;background:#fff9}.full-journey h4{font-size:17px}.full-journey h5{font-size:14px;margin:20px 0 8px}.full-journey p{line-height:1.6}.full-journey blockquote{margin:10px 0;padding:5px 15px;border-left:2px solid #c2a4e6;color:#806b8c;line-height:1.6}.full-journey .original-context{white-space:pre-wrap;overflow-wrap:anywhere}
 
 [hidden]{display:none!important}
+
+body{background:#fff;background-image:none}.primary{background:linear-gradient(125deg,#399de0,#27b9ad);box-shadow:0 9px 22px #399de026}.wordmark b{color:#299caf}.hero h1 em{background:linear-gradient(110deg,#268ed3,#24b7a9);background-clip:text;-webkit-text-fill-color:transparent}.hero h1{font-size:clamp(42px,7vw,94px);letter-spacing:-3px}.step-index b{color:#4a9eb5}.usage-count{color:#427d8f}.hero-orb{opacity:.45}

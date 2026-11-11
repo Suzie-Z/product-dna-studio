@@ -26,9 +26,18 @@ class ContractTests(unittest.TestCase):
  def test_job_families_and_transferable_strengths(self):
   for label in ['Multimodal Evaluation','Built an LLM pipeline','API Development']:
    d=make_map();d['journey'][0]['label']=label
-   with self.assertRaisesRegex(ValueError,'professional job-family'):app.validate_map(d,[SOURCE])
+   with self.assertRaisesRegex(ValueError,'journey'):app.validate_map(d,[SOURCE])
   d=make_map();d['strengths'][0]['label']=d['journey'][0]['label']
   with self.assertRaisesRegex(ValueError,'transferable capability'):app.validate_map(d,[SOURCE])
+ def test_non_pm_scope_and_aspiration_do_not_become_pm_experience(self):
+  for content in ['I am a chef who designs seasonal menus and improves kitchen service.','I am a software engineer building APIs and evaluation tooling.','I am not a product manager. I build backend services.','I hope to become an AI PM. I only worked as an engineer.','我不是产品经理，想成为产品经理，目前只写后端代码。']:
+   with patch('career_ai.provider')as provider:
+    response=app.process_generate({'sources':[{**SOURCE,'content':content}]})
+   self.assertEqual(response['map']['status'],'needs_more_info',content);provider.assert_not_called()
+  self.assertTrue(app.has_pm_context([{**SOURCE,'content':'我是平台产品经理，但没有管理过团队。我负责产品路线图。'}]))
+ def test_role_schema_excludes_generic_professions(self):
+  values=app.SCHEMA['properties']['journey']['items']['properties']['label']['enum']
+  self.assertIn('Platform PM',values);self.assertNotIn('Software Engineering',values);self.assertNotIn('Business Consulting',values)
  def test_caps_and_single_strength(self):
   self.assertEqual(len(app.validate_map(make_map(1,1),[SOURCE])['strengths']),1)
   for group in ['journey','strengths']:
@@ -61,7 +70,7 @@ class ContractTests(unittest.TestCase):
  def test_unknown_chronology_is_theme_not_fake_timeline(self):
   d=make_map();d['journey_type']='chronological';d['journey'][0]['date_label']='2025';out=app.validate_map(d,[SOURCE]);self.assertEqual(out['journey_type'],'experience_areas');self.assertIsNone(out['journey'][0]['date_label'])
  def test_unknown_icon_falls_back(self):
-  d=make_map();d['strengths'][0]['icon']='javascript:evil()';self.assertEqual(app.validate_map(d,[SOURCE])['strengths'][0]['icon'],'spark')
+  d=make_map();d['strengths'][0]['icon']='javascript:evil()';self.assertEqual(app.validate_map(d,[SOURCE])['strengths'][0]['icon'],'strategy')
  def test_refinement_preserves_every_unlisted_field(self):
   previous=make_map();candidate=copy.deepcopy(previous);candidate['strengths'][0]['label']='Applied Discovery';candidate['strengths'][1]['label']='Unrequested Change';candidate['career_signature']='Unrequested New Signature'
   out=app.apply_refinement(previous,candidate,['/strengths/k1/label']);self.assertEqual(out['strengths'][0]['label'],'Applied Discovery');self.assertEqual(out['strengths'][1],previous['strengths'][1]);self.assertEqual(out['career_signature'],previous['career_signature'])
@@ -138,7 +147,7 @@ class ContractTests(unittest.TestCase):
    out=app.process_review({'sources':[SOURCE],'map':d,'context_consent':True})
    self.assertTrue(out['reviewed']);self.assertTrue(all(review.call_args.args[0]['export_review']))
  def test_pdf_typography_does_not_break_evidence_grounding(self):
-  source={**SOURCE,'content':'I evaluated “model fit” across real-\nworld workflows and improved team’s API reliability.'}
+  source={**SOURCE,'content':'As AI PM, I evaluated “model fit” across real-\nworld workflows and improved team’s API reliability.'}
   data=make_map(1,1)
   for item in data['journey']+data['strengths']:
    item['evidence_quotes'][0]['quote']='I evaluated "model fit" across real-world workflows'

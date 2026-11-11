@@ -1,91 +1,100 @@
-/* One illustrated world. AI chooses evidence-grounded content; approved art stays fixed. */
+/* PM Career DNA: one illustrated world, fixed geometry, stable per-result variant. */
 (function(){
 'use strict';
-const ART='/assets/career-world-atlas.png',BRAND='/assets/career-dna-logo.png';
-const palette=[['#35c9ba','#dcfaf3'],['#4b9bf2','#e2f1ff'],['#f6ad38','#fff0db'],['#a773e5','#eee0ff']];
+const WORLD='/assets/career-world-atlas.png',BRAND='/assets/pm-career-dna-logo.png',AVATARS='/assets/pm-characters-24.png',ICONS='/assets/pm-icons-24.png';
+const lib=window.PM_LIBRARY;
+document.querySelector('.brand-symbol').src=BRAND;
+const favicon=document.createElement('link');favicon.rel='icon';favicon.href=BRAND;document.head.append(favicon);
+const names=['growth','conversion','platform','api','operations','ai','analytics','experimentation','trust_safety','user_insight','strategy','roadmap','ux','commerce','mobile','saas','enterprise','content','marketplace','recommendation','monetization','collaboration','delivery','automation'];
+const aliases={chart:'analytics','trending-up':'growth',layers:'platform',brain:'ai',shield:'trust_safety',code:'api',users:'user_insight',finance:'monetization',compass:'strategy',globe:'marketplace',spark:'strategy'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const measure=document.createElement('canvas').getContext('2d');
-const sprites={chart:[0,1],layers:[1,1],brain:[2,1],shield:[3,1],code:[0,2],users:[1,2],finance:[2,2],healthcare:[3,2],education:[0,3],hospitality:[1,3],operations:[2,3],compass:[3,3],globe:[2,4],spark:[3,4],cloud:[2,5],garden:[3,5]};
-function CareerDNAResult(data,mobile=false){
- if(data.status!=='ready'||!data.journey.length||data.journey.length>4||!data.strengths.length||data.strengths.length>4)throw Error('A map needs 1–4 evidence-supported career categories and strengths.');
- const W=mobile?760:1600,n=data.journey.length,k=data.strengths.length;
- const journeyY=mobile?235:260,journeyH=mobile?n*255+65:365;
- const bridgeY=journeyY+journeyH+15,capY=bridgeY+80,capH=mobile?360+k*245:340,H=mobile?capY+capH+100:1180;
- const prefix='career-world-',issues=[],boxes=[],parts=[];
+let themeBag=[],avatarBag=[],lastTheme=-1,lastAvatar=-1;
+function refill(size,previous){const a=Array.from({length:size},(_,i)=>i);for(let i=a.length-1;i>0;i--){const v=new Uint32Array(1);crypto.getRandomValues(v);const j=v[0]%(i+1);[a[i],a[j]]=[a[j],a[i]]}if(a[a.length-1]===previous)[a[0],a[a.length-1]]=[a[a.length-1],a[0]];return a}
+window.nextPMVariant=()=>{if(!themeBag.length)themeBag=refill(lib.themes.length,lastTheme);if(!avatarBag.length)avatarBag=refill(24,lastAvatar);lastTheme=themeBag.pop();lastAvatar=avatarBag.pop();return Object.freeze({theme_id:lib.themes[lastTheme].id,avatar_id:'pm_avatar_'+String(lastAvatar+1).padStart(2,'0'),template_version:'pm-world-v2'})};
+function resolveVariant(v){return {theme:lib.themes.find(t=>t.id===v?.theme_id)||lib.themes[0],avatar:/^pm_avatar_(0[1-9]|1[0-9]|2[0-4])$/.test(v?.avatar_id)?Number(v.avatar_id.slice(-2))-1:0}}
+function tint(hex,white=.85){const rgb=hex.slice(1).match(/../g).map(v=>Math.round(parseInt(v,16)*(1-white)+255*white));return '#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('')}
+function build(data,mobile=false,variant){
+ if(data.status!=='ready'||!data.journey.length||data.journey.length>4||!data.strengths.length||data.strengths.length>4)throw Error('A PM map needs 1–4 supported roles and capabilities.');
+ const {theme,avatar}=resolveVariant(variant),W=mobile?760:1600,n=data.journey.length,k=data.strengths.length;
+ const journeyY=230,journeyH=mobile?n*300+80:485,bridgeY=journeyY+journeyH+25,capY=bridgeY+85,capH=mobile?330+k*260:335,H=mobile?capY+capH+90:1290;
+ const prefix='pm-world-',parts=[],issues=[],boxes=[],foreground=[];
  const id=s=>prefix+s,url=s=>'url(#'+id(s)+')';
+ function zone(key,x,y,w,h,kind){foreground.push({id:key,x,y,width:w,height:h,kind});return `data-foreground="${esc(key)}"`}
  function rect(x,y,w,h,r,fill,stroke='#ffffffe6',filter='shadow'){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="3"${filter?` filter="${url(filter)}"`:''}/>`}
  function text(s,x,y,size=26,weight=500,color='#171333'){return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${size}" font-weight="${weight}" fill="${color}">${esc(s)}</text>`}
- function fit(s,x,y,w,h,size=26,weight=500,maxLines=3){
-  let rows=[],f=size;
-  for(;f>=16;f--){measure.font=`${weight} ${f}px Arial`;rows=[];let row='';for(const word of String(s).split(/\s+/)){const next=row?row+' '+word:word;if(row&&measure.measureText(next).width>w){rows.push(row);row=word}else row=next}if(row)rows.push(row);if(rows.length<=maxLines&&rows.length*f*1.2<=h&&rows.every(r=>measure.measureText(r).width<=w))break}
-  if(f<16){issues.push(String(s));return text('Regenerate for shorter wording',x,y,16,500,'#77578d')}
-  boxes.push({text:String(s),width:w,height:h,size:f,lines:rows.length,paintedHeight:rows.length*f*1.2});
-  return rows.map((row,i)=>text(row,x,y+(i-(rows.length-1)/2)*f*1.2,f,weight)).join('');
+ function fit(s,x,y,w,h,size=26,weight=500,maxLines=3,key=''){
+  let f=size,rows=[];const min=mobile?24:20;
+  for(;f>=min;f--){measure.font=`${weight} ${f}px Arial`;rows=[];let line='';for(const word of String(s).split(/\s+/)){const next=line?line+' '+word:word;if(line&&measure.measureText(next).width>w){rows.push(line);line=word}else line=next}if(line)rows.push(line);if(rows.length<=maxLines&&rows.length*f*1.2<=h&&rows.every(r=>measure.measureText(r).width<=w))break}
+  if(f<min){issues.push('Text exceeds its reserved area: '+(key||'copy'));return text('Regenerate for shorter wording',x,y,min,500,'#77578d')}
+  boxes.push({text:String(s),x:x-w/2,y:y-h/2,width:w,height:h,size:f,lines:rows.length,paintedHeight:rows.length*f*1.2});
+  const attr=key?zone(key,x-w/2,y-h/2,w,h,'text'):'';
+  return `<g ${attr}>`+rows.map((row,i)=>text(row,x,y+(i-(rows.length-1)/2)*f*1.2,f,weight)).join('')+'</g>';
  }
- function crop(view,x,y,w,h,name){return `<svg data-art="${name}" x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${view.join(' ')}" preserveAspectRatio="none" overflow="hidden"><use href="#${id('atlas')}"/></svg>`}
- function asset(name,x,y,w,h=w){const key=name==='trending-up'?'chart':name;const [col,row]=sprites[key]||sprites.spark;const view=key==='cloud'?[520,1295,222,218]:key==='garden'?[774,1286,243,243]:[col*256+8,row*256+8,240,240];return crop(view,x,y,w,h,key)}
- function pill(label,x,y,w,size=29){return rect(x,y,w,58,29,url('pill'),'#e2c7fc')+`<path d="M${x+28} ${y+7}H${x+w-28}" stroke="#ffffff65" stroke-width="3" stroke-linecap="round"/>`+text(label,x+w/2,y+31,size,750,'white')}
- function DecorativeBackground(){return rect(0,0,W,H,36,url('background'),'none','')+asset('cloud',-10,62,mobile?200:330,mobile?120:185)+asset('cloud',W-(mobile?188:320),37,mobile?210:355,mobile?125:210)+asset('cloud',W-260,journeyY+85,300,225)+`<g fill="#ffe072" stroke="#ffbc2e" stroke-width="7" stroke-linecap="round"><path d="m${W/2-430} 102-15-23m14 45-23-4m${W/2+428} 109 17-25m-10 46 23-5"/></g>`}
- function JourneyConnection(){
-  const y=journeyY+270;
-  const path=mobile?`M112 ${journeyY+100}C85 ${journeyY+290} 140 ${journeyY+400} 112 ${journeyY+journeyH-45}`:`M40 ${y+28}C240 ${y-39} 340 ${y+28} 465 ${y+15}S705 ${y-12} 830 ${y+24}S1100 ${y-30} 1250 ${y+16} 1450 ${y-30} 1560 ${y+5}`;
-  return `<g data-component="JourneyConnection"><path d="${path}" fill="none" stroke="#ffd66e" stroke-width="17" opacity=".58" filter="${url('glow')}"/><path d="${path}" fill="none" stroke="#ffe390" stroke-width="9"/><path d="${path}" fill="none" stroke="#fffdf1" stroke-width="4"/></g>`;
+ function crop(atlas,view,x,y,w,h,key=''){
+  const attr=key?zone(key,x,y,w,h,'illustration'):'';
+  return `<svg ${attr} data-art="${esc(key||atlas)}" x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${view.join(' ')}" preserveAspectRatio="none" overflow="hidden"><use href="#${id(atlas)}"/></svg>`;
  }
- function CareerJourneyIsland(j,i){
-  const unit=(W-160)/n,x=mobile?440:80+unit*(i+.5),y=mobile?journeyY+90+i*255:journeyY+60;
-  let out=`<g data-component="CareerJourneyIsland"><title>${esc(j.evidence_note)}</title>`;
-  out+=asset(j.icon,mobile?65:x-47,mobile?y-32:y-52,mobile?94:94);
-  out+=fit(j.label,x,mobile?y-3:y+63,mobile?440:unit-26,mobile?73:65,mobile?33:31,800,2);
-  out+=fit(j.description,x,mobile?y+69:y+125,mobile?430:unit-30,66,mobile?29:25,500,2);
-  if(j.date_label)out+=text(j.date_label,x,mobile?y+120:y+167,18,500,'#705889');
-  const islandX=mobile?22:x-150,islandY=mobile?y+72:journeyY+222;
-  out+=crop([i*256,32,256,211],islandX,islandY,mobile?180:300,mobile?125:188,'island-'+i);
-  if(data.journey_type==='chronological'&&i<n-1){const xx=mobile?112:x+unit/2,yy=mobile?y+220:y+113;out+=`<path d="${mobile?`m${xx-9} ${yy-7} 9 9 9-9`:`m${xx-7} ${yy-10} 10 10-10 10`}" fill="none" stroke="#af78ed" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`}
-  if(!mobile)out+=`<path d="M${x} ${journeyY+345}Q${x} ${bridgeY+34} ${W/2} ${bridgeY+34}" fill="none" stroke="#ffdfa0" stroke-width="8" opacity=".6" filter="${url('glow')}"/><path d="M${x} ${journeyY+345}Q${x} ${bridgeY+34} ${W/2} ${bridgeY+34}" fill="none" stroke="#fff8dc" stroke-width="3"/>`;
+ function icon(name,x,y,size,key){const i=Math.max(0,names.indexOf(aliases[name]||name));return crop('icons',[(i%6)*256+8,Math.floor(i/6)*256+8,240,240],x,y,size,size,key)}
+ function decor(name,x,y,w,h){const view=name==='cloud'?[520,1295,222,218]:[774,1286,243,243];return crop('world',view,x,y,w,h)}
+ function pill(s,x,y,w){return rect(x,y,w,58,29,url('pill'),'#fff9')+text(s,x+w/2,y+31,mobile?29:31,750,'#fff')}
+ function background(){return rect(0,0,W,H,36,url('background'),'none','')+decor('cloud',0,mobile?0:5,mobile?120:300,mobile?40:160)+decor('cloud',W-(mobile?120:300),mobile?0:5,mobile?120:300,mobile?40:160)}
+ function connections(){
+  const d=mobile?`M112 ${journeyY+200}V${journeyY+journeyH-40}`:`M60 645C260 590 350 650 500 630S750 610 900 642 1200 590 1540 640`;
+  return `<g data-component="JourneyConnection"><path d="${d}" stroke="#ffda7e" stroke-width="17" opacity=".55" fill="none" filter="${url('glow')}"/><path d="${d}" stroke="#ffe69c" stroke-width="8" fill="none"/><path d="${d}" stroke="#fffef3" stroke-width="3" fill="none"/></g>`;
+ }
+ function role(j,i){
+  const unit=(W-160)/n,x=mobile?485:80+unit*(i+.5),row=mobile?journeyY+40+i*300:0;
+  const preferred=lib.roles.find(r=>r.display_label===j.label)?.preferred_icon_id;
+  const symbol=preferred?names[Number(preferred.slice(-2))-1]:j.label==='Growth Hacker'?'growth':j.icon;
+  let out=`<g data-component="CareerJourneyIsland">`+icon(symbol,mobile?70:x-40,mobile?row+35:265,mobile?88:80,j.id+':icon');
+  out+=fit(j.label,x,mobile?row+67:397,mobile?400:unit-56,mobile?75:68,mobile?34:30,800,2,j.id+':label');
+  out+=fit(j.description,x,mobile?row+168:476,mobile?400:unit-64,mobile?90:58,mobile?30:25,500,mobile?3:2,j.id+':description');
+  if(j.date_label)out+=fit(j.date_label,x,mobile?row+244:529,mobile?400:unit-64,24,mobile?24:20,500,1,j.id+':date');
+  out+=crop('world',[i*256,32,256,211],mobile?50:x-136,mobile?row+160:553,mobile?130:272,mobile?110:150,j.id+':island');
+  if(data.journey_type==='chronological'&&i<n-1){const xx=mobile?112:x+unit/2,yy=mobile?row+290:477;out+=`<path d="${mobile?`m${xx-8} ${yy-7} 8 8 8-8`:`m${xx-7} ${yy-10} 10 10-10 10`}" fill="none" stroke="${theme.primary}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`}
+  if(!mobile)out+=`<path d="M${x} 703Q${x} ${bridgeY+32} ${W/2} ${bridgeY+32}" fill="none" stroke="#ffe8ad" stroke-width="8" opacity=".7" filter="${url('glow')}"/>`;
   return out+'</g>';
  }
- function CareerCharacter(){
-  const x=mobile?15:8,y=mobile?capY-25:capY-27,w=mobile?340:360;
-  let out=`<g data-component="CareerCharacter">${crop([0,1020,512,516],x,y,w,w,'human-chibi')}`;
-  const domain=data.journey.find(j=>['code','brain','healthcare','education','finance','hospitality','operations'].includes(j.icon))?.icon||data.strengths[0].icon;
-  // A symbolic work prop is selected from professional context, never appearance.
-  out+=asset(domain,mobile?260:264,mobile?capY+231:capY+236,67);
+ function character(){return `<g data-component="CareerCharacter">${crop('avatars',[(avatar%6)*256,Math.floor(avatar/6)*256,256,256],mobile?30:25,capY+15,mobile?280:300,mobile?280:300,'human-chibi')}</g>`}
+ function capability(s,i){
+  const gap=18,available=mobile?680:1215,w=mobile?680:(available-gap*(k-1))/k,x=mobile?40:355+i*(w+gap),y=mobile?capY+330+i*260:capY+15,h=mobile?240:300;
+  let out=`<g data-component="CapabilityCard">${rect(x,y,w,h,40,url('card'+i),'#fff','cardShadow')}<rect x="${x+7}" y="${y+7}" width="${w-14}" height="${h-14}" rx="34" fill="none" stroke="#ffffffaa" stroke-width="3"/>`;
+  out+=icon(s.icon,mobile?x+28:x+w/2-35,mobile?y+72:y+5,mobile?90:70,s.id+':icon');
+  out+=fit(s.label,mobile?x+400:x+w/2,mobile?y+62:y+125,mobile?480:w-38,mobile?80:68,mobile?35:29,800,2,s.id+':label');
+  out+=fit(s.description,mobile?x+400:x+w/2,mobile?y+166:y+220,mobile?480:w-42,mobile?96:90,mobile?30:24,500,3,s.id+':description');
   return out+'</g>';
  }
- function CapabilityCard(s,i){
-  const gap=14,available=mobile?W-80:W-390,col=mobile?0:i,row=mobile?i:0,cols=mobile?1:k,w=(available-gap*(cols-1))/cols,h=mobile?225:304,x=(mobile?40:355)+col*(w+gap),y=mobile?capY+335+row*245:capY+18;
-  const iconX=mobile?x+85:x+w/2,iconY=mobile?y+108:y+53;
-  return `<g data-component="CapabilityCard"><title>${esc(s.evidence_note)}</title>${rect(x,y,w,h,45,url('card'+i),'#fff','cardShadow')}<rect x="${x+7}" y="${y+7}" width="${w-14}" height="${h-14}" rx="39" fill="none" stroke="#ffffff94" stroke-width="3"/>${asset(s.icon,iconX-(mobile?47:53),iconY-(mobile?47:53),mobile?94:106)}${fit(s.label,mobile?x+w/2+49:x+w/2,mobile?y+66:y+140,mobile?w-205:w-32,75,mobile?35:29,800,2)}${fit(s.description,mobile?x+w/2+49:x+w/2,mobile?y+153:y+235,mobile?w-205:w-34,91,mobile?30:24,500,3)}</g>`;
+ parts.push(`<svg xmlns="http://www.w3.org/2000/svg" data-world="pm-illustrated-3d" data-theme="${theme.id}" data-avatar="pm_avatar_${String(avatar+1).padStart(2,'0')}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="${id('title')} ${id('desc')}" style="font-family:Arial,sans-serif"><title id="${id('title')}">My PM Career DNA — ${esc(data.career_signature)}</title><desc id="${id('desc')}">${esc(data.superpower)}. One evidence-grounded PM journey and capability map.</desc><defs><image id="${id('world')}" href="${WORLD}" width="1024" height="1536"/><image id="${id('avatars')}" href="${AVATARS}" width="1536" height="1024"/><image id="${id('icons')}" href="${ICONS}" width="1536" height="1024"/>
+ <linearGradient id="${id('background')}" x2="1" y2="1"><stop stop-color="${theme.background[0]}"/><stop offset="1" stop-color="${theme.background[1]}"/></linearGradient>
+ <linearGradient id="${id('panel')}" x2=".7" y2="1"><stop stop-color="#ffffffcc"/><stop offset="1" stop-color="${tint(theme.primary)}"/></linearGradient>
+ <linearGradient id="${id('pill')}" x2="0" y2="1"><stop stop-color="${tint(theme.primary,.3)}"/><stop offset="1" stop-color="${theme.primary}"/></linearGradient>
+ <filter id="${id('shadow')}" x="-25%" y="-40%" width="150%" height="185%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="${theme.primary}" flood-opacity=".2"/></filter>
+ <filter id="${id('cardShadow')}" x="-25%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="${theme.primary}" flood-opacity=".23"/></filter>
+ <filter id="${id('glow')}" x="-30%" y="-150%" width="160%" height="400%"><feGaussianBlur stdDeviation="6"/></filter>`);
+ [theme.primary,...theme.accents].forEach((color,i)=>parts.push(`<linearGradient id="${id('card'+i)}" x2=".7" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="${tint(color,.78)}"/></linearGradient>`));
+ parts.push('</defs>',background(),rect(mobile?30:390,30,mobile?700:820,115,35,'#ffffffeb','#fff'),`<image ${zone('brand',mobile?50:420,55,72,72,'illustration')} href="${BRAND}" x="${mobile?50:420}" y="55" width="72" height="72"/>`,fit('My PM Career DNA',mobile?450:900,94,mobile?490:600,82,mobile?42:54,800,1,'title'),fit(data.career_signature,W/2,185,W-140,38,mobile?25:25,600,1,'signature'));
+ parts.push(rect(10,journeyY,W-20,journeyH,60,url('panel'),'#fff'),connections());data.journey.forEach((j,i)=>parts.push(role(j,i)));
+ parts.push(decor('garden',0,journeyY+journeyH-70,mobile?25:90,70),decor('garden',W-(mobile?25:90),journeyY+journeyH-70,mobile?25:90,70),pill('My PM Journey',mobile?30:36,journeyY-30,mobile?330:350));
+ parts.push(rect(10,capY,W-20,capH,60,url('panel'),'#fff'),character());
+ if(mobile)parts.push(fit(data.superpower,530,capY+145,360,140,29,500,4,'superpower'));
+ data.strengths.forEach((s,i)=>parts.push(capability(s,i)));parts.push(pill('Shape My PM DNA',W/2-240,bridgeY,480));
+ if(!mobile)parts.push(fit(data.superpower,W/2,1215,W-180,38,24,500,1,'superpower'));
+ parts.push(text('PM Career DNA',W/2,H-24,15,500,'#6a7d88'),'</svg>');
+ const collisions=[];
+ for(let i=0;i<foreground.length;i++)for(let j=i+1;j<foreground.length;j++){
+  const a=foreground[i],b=foreground[j];if(Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>.5&&Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)>.5)collisions.push([a.id,b.id]);
  }
- parts.push(`<svg xmlns="http://www.w3.org/2000/svg" data-world="illustrated-3d" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="${id('title')} ${id('desc')}" style="font-family:Arial,sans-serif"><title id="${id('title')}">My Career DNA — ${esc(data.career_signature)}</title><desc id="${id('desc')}">${esc(data.superpower)}. ${data.journey_type==='chronological'?'Career progression':'Professional experience areas without an implied chronological sequence'}. One personalised illustrated map based on your experience.</desc><defs><image id="${id('atlas')}" width="1024" height="1536" href="${ART}"/>
- <linearGradient id="${id('background')}" x2="1" y2="1"><stop stop-color="#e8ddff"/><stop offset=".48" stop-color="#fff5fa"/><stop offset="1" stop-color="#dedbff"/></linearGradient>
- <linearGradient id="${id('panel')}" x2=".6" y2="1"><stop stop-color="#ffffff91"/><stop offset="1" stop-color="#c3a8f35c"/></linearGradient>
- <linearGradient id="${id('pill')}" x2="0" y2="1"><stop stop-color="#d6a2f2"/><stop offset=".45" stop-color="#b66fe2"/><stop offset="1" stop-color="#7d3fc1"/></linearGradient>
- <filter id="${id('shadow')}" x="-25%" y="-40%" width="150%" height="185%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#8050ab" flood-opacity=".24"/></filter>
- <filter id="${id('cardShadow')}" x="-25%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#8965bc" flood-opacity=".26"/></filter>
- <filter id="${id('glow')}" x="-30%" y="-150%" width="160%" height="400%"><feGaussianBlur stdDeviation="7"/></filter>`);
- palette.forEach((p,i)=>parts.push(`<linearGradient id="${id('card'+i)}" x2=".6" y2="1"><stop stop-color="#ffffffe8"/><stop offset=".48" stop-color="${p[1]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient>`));
- parts.push('</defs>',DecorativeBackground(),rect(W/2-(mobile?280:405),62,mobile?560:810,134,36,'#fff9','#ffffffc9'),`<image href="${BRAND}" x="${W/2-(mobile?265:375)}" y="89" width="79" height="79"/>`,text('My Career DNA',W/2+38,128,mobile?45:58,800));
- parts.push(fit(data.career_signature,W/2,222,W-130,31,mobile?23:25,600,1));
- parts.push(rect(10,journeyY,W-20,journeyH,65,url('panel'),'#fff'),asset('cloud',W-(mobile?207:310),journeyY+105,mobile?200:340,mobile?150:245),JourneyConnection());
- data.journey.forEach((j,i)=>parts.push(CareerJourneyIsland(j,i)));
- parts.push(asset('garden',-15,journeyY+journeyH-(mobile?140:177),mobile?165:220,mobile?145:195),asset('garden',W-(mobile?142:196),journeyY+journeyH-(mobile?115:138),mobile?160:210,mobile?138:160));
- parts.push(pill('My Career Journey',36,journeyY-27,mobile?335:375,29));
- parts.push(rect(10,capY,W-20,capH,65,url('panel'),'#fff'),asset('cloud',W-210,capY+capH-125,220,146),asset('garden',-12,capY+capH-170,200,170),CareerCharacter());
- if(mobile)parts.push(fit(data.superpower,515,capY+126,355,160,29,500,4));
- data.strengths.forEach((s,i)=>parts.push(CapabilityCard(s,i)));
- parts.push(pill('Shape My Career DNA',W/2-(mobile?245:250),bridgeY,mobile?490:500,mobile?29:31));
- if(!mobile)parts.push(fit(data.superpower,W/2,1120,W-200,37,23,500,1));
- parts.push(text('Career DNA Studio',W/2,H-23,15,500,'#9072b0'),'</svg>');
- return {svg:parts.join(''),metrics:{ok:!issues.length,issues,boxes,width:W,height:H,illustrated:true,oneResult:true}};
+ if(collisions.length)issues.push('Foreground regions overlap.');
+ return {svg:parts.join(''),metrics:{ok:!issues.length,issues,boxes,foreground,collisions,width:W,height:H,theme_id:theme.id,avatar_id:'pm_avatar_'+String(avatar+1).padStart(2,'0'),oneResult:true}};
 }
-window.buildDNAScene=CareerDNAResult;
-let current=null;const mobileQuery=matchMedia('(max-width:700px)');
-window.renderDNAMap=function(target,data){current={target,data};const scene=CareerDNAResult(data,mobileQuery.matches);target.innerHTML=scene.svg;target.dataset.layout=mobileQuery.matches?'mobile':'desktop';return scene.metrics};
-mobileQuery.addEventListener('change',()=>{if(current)window.renderDNAMap(current.target,current.data)});
-window.renderDNAPoster=async function(canvas,data){
- const scene=CareerDNAResult(data);await document.fonts.ready;
+window.buildDNAScene=build;
+let current=null;const query=matchMedia('(max-width:700px)');
+window.renderDNAMap=(target,data,variant)=>{current={target,data,variant};const scene=build(data,query.matches,variant);target.innerHTML=scene.svg;target.dataset.layout=query.matches?'mobile':'desktop';target.renderMetrics=scene.metrics;return scene.metrics};
+query.addEventListener('change',()=>{if(current)window.renderDNAMap(current.target,current.data,current.variant)});
+window.renderDNAPoster=async(canvas,data,variant)=>{
+ const scene=build(data,false,variant);await document.fonts.ready;
  const blob=new Blob([scene.svg],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob);
- try{const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Illustration assets could not load.'));img.src=url});canvas.width=scene.metrics.width*2;canvas.height=scene.metrics.height*2;canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);canvas.renderMetrics=scene.metrics;return scene.metrics}finally{URL.revokeObjectURL(url)}
+ try{const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('PM illustration assets could not load.'));img.src=url});canvas.width=scene.metrics.width*2;canvas.height=scene.metrics.height*2;canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);canvas.renderMetrics=scene.metrics;return scene.metrics}finally{URL.revokeObjectURL(url)}
 };
 })();

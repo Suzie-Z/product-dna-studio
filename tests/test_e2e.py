@@ -46,18 +46,18 @@ class CompleteFlow(unittest.TestCase):
   page,context=self.page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   self.assertTrue(page.locator('#generate').is_disabled());self.assertEqual(page.evaluate('document.activeElement.id'),'step-one')
   self.assertEqual(page.locator('#story').get_attribute('placeholder'),None)
-  self.assertEqual(page.locator('#step-one h2').inner_text(),'Share Your Journey')
+  self.assertEqual(page.locator('#step-one h2').inner_text(),'Share Your PM Journey')
   for selector in ['#format','#refinement','#direct-editor','#step-three','#map-outline','#copy-caption']:
    self.assertEqual(page.locator(selector).count(),0)
   self.assertTrue(page.locator('.brand-symbol').evaluate('(e)=>e.complete&&e.naturalWidth>0'))
   initial=json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations']
   page.locator('#story').fill('I work in tech.');page.locator('#generate').click();page.locator('#clarification').wait_for(state='visible')
   self.assertFalse(page.locator('#result-panel').is_visible());self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial)
-  page.locator('#clarification-answer').fill('I researched customer needs and tested working prototypes. I documented the results for the design team.');page.locator('#answer').click()
+  page.locator('#clarification-answer').fill('I am a growth product manager. I owned onboarding requirements, researched customer needs and prioritised experiments with the product team.');page.locator('#answer').click()
   page.wait_for_function("exportCanvas.renderMetrics?.ok")
   self.assertEqual(page.locator('#generation-number').inner_text(),'Generation #'+str(initial+1))
-  self.assertEqual(page.locator('#map-visual > svg text').first.text_content(),'My Career DNA')
-  self.assertIn('My Career Journey',page.locator('#map-visual').text_content());self.assertIn('Shape My Career DNA',page.locator('#map-visual').text_content())
+  self.assertEqual(page.locator('#map-visual > svg text').first.text_content(),'My PM Career DNA')
+  self.assertIn('My PM Journey',page.locator('#map-visual').text_content());self.assertIn('Shape My PM DNA',page.locator('#map-visual').text_content())
   self.assertEqual(page.locator('#result-panel button').count(),1)
   self.assertEqual(page.locator('#map-visual > svg').count(),1);self.assertEqual(page.locator('#result-panel canvas').count(),0)
   self.assertEqual(page.locator('[data-art=human-chibi]').count(),1)
@@ -66,25 +66,25 @@ class CompleteFlow(unittest.TestCase):
   self.assertNotIn('src_',page.locator('#map-visual').text_content());self.assertNotIn('First draft',page.locator('body').inner_text())
   page.screenshot(path=str(ART/'career-desktop.png'),full_page=True)
   with page.expect_download()as download:page.locator('#save').click()
-  file=ART/'career-export.png';download.value.save_as(str(file));self.assertEqual(download.value.suggested_filename,'my-career-dna.png')
+  file=ART/'career-export.png';download.value.save_as(str(file));self.assertEqual(download.value.suggested_filename,'my-pm-career-dna.png')
   from PIL import Image
-  with Image.open(file)as image:self.assertEqual(image.size,(3200,2360))
+  with Image.open(file)as image:self.assertEqual(image.size,(3200,2580))
   self.assertGreater(file.stat().st_size,30000)
   self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial+1)
   # Change requirements in the original input and regenerate through the same flow.
-  page.locator('#story').fill('I built reusable APIs and investigated reliability incidents. Highlight reliability and practical documentation.')
+  page.locator('#story').fill('I am a platform product manager. I owned the product roadmap for reusable capabilities and prioritised adoption requirements for product teams.')
   self.assertFalse(page.locator('#result-panel').is_visible());page.locator('#generate').click()
   page.wait_for_function("document.querySelector('#result-panel').classList.contains('hidden')===false&&document.querySelector('#generation-number').textContent==='Generation #"+str(initial+2)+"'")
   self.assertEqual(page.locator('#generation-number').inner_text(),'Generation #'+str(initial+2))
-  page.set_viewport_size({'width':390,'height':844});self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
-  page.wait_for_function("document.querySelector('#map-visual').dataset.layout==='mobile'");self.assertEqual(page.locator('#map-visual > svg').count(),1);self.assertEqual(page.locator('#result-panel canvas').count(),0);page.screenshot(path=str(ART/'career-mobile.png'),full_page=True);page.locator('#map-visual').screenshot(path=str(ART/'career-mobile-map.png'))
+  variant=page.evaluate('structuredClone(renderVariant)');page.set_viewport_size({'width':390,'height':844});self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+  page.wait_for_function("document.querySelector('#map-visual').dataset.layout==='mobile'");self.assertEqual(page.evaluate('renderVariant'),variant);self.assertEqual(page.locator('#map-visual > svg').get_attribute('data-avatar'),variant['avatar_id']);self.assertEqual(page.locator('#map-visual > svg').count(),1);self.assertEqual(page.locator('#result-panel canvas').count(),0);page.screenshot(path=str(ART/'career-mobile.png'),full_page=True);page.locator('#map-visual').screenshot(path=str(ART/'career-mobile-map.png'))
   self.assertEqual(page.evaluate('Object.keys(localStorage).length'),0);self.assertFalse(errors,errors);context.close()
  def test_all_layouts_and_explicit_overflow_fallback(self):
   page,context=self.page()
   for j in range(1,5):
    for k in range(1,5):
     for mobile in [False,True]:
-     metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[make_map(j,k),mobile]);self.assertTrue(metrics['ok'],(j,k,mobile,metrics['issues']))
+     metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[make_map(j,k),mobile]);self.assertTrue(metrics['ok'],(j,k,mobile,metrics['issues'],metrics.get('collisions')));self.assertEqual(metrics['collisions'],[])
      for box in metrics['boxes']:self.assertLessEqual(box['paintedHeight'],box['height'])
   for k in range(1,5):
    page.evaluate('(d)=>renderDNAMap(document.querySelector("#map-visual"),d)',make_map(4,k));page.locator('#step-two').evaluate('(e)=>e.classList.remove("hidden")');page.locator('#result-panel').evaluate('(e)=>e.classList.remove("hidden")');page.locator('#map-visual').screenshot(path=str(ART/f'career-{k}-strengths.png'))
@@ -96,10 +96,18 @@ class CompleteFlow(unittest.TestCase):
   self.assertEqual(page.locator('#map-visual script').count(),0)
   with self.assertRaises(Exception):page.evaluate('(d)=>buildDNAScene(d)',make_map(5,1))
   context.close()
+ def test_variant_rotation_and_stable_export(self):
+  page,context=self.page()
+  values=page.evaluate('Array.from({length:24},()=>nextPMVariant())')
+  self.assertEqual(len({v['avatar_id']for v in values}),24)
+  for start in range(0,24,6):self.assertEqual(len({v['theme_id']for v in values[start:start+6]}),6)
+  for variant in values:
+   data=page.evaluate('([d,v])=>buildDNAScene(d,false,v).metrics',[make_map(4,4),variant]);self.assertTrue(data['ok']);self.assertEqual(data['avatar_id'],variant['avatar_id']);self.assertEqual(data['theme_id'],variant['theme_id'])
+  context.close()
  def test_upload_clear_voice_and_fallback(self):
   page,context=self.page();page.locator('#story').fill('My typed notes will stay when the CV is removed.')
-  page.locator('#file').set_input_files({'name':'resume.txt','mimeType':'text/plain','buffer':b'I built reusable APIs and investigated reliability incidents.'});page.wait_for_function("document.querySelector('#cv-status').textContent.includes('Ready')")
-  self.assertIn('reusable APIs',page.locator('#cv-text').input_value());page.locator('#cv-text').fill('I built reusable APIs and corrected this extracted text.')
+  page.locator('#file').set_input_files({'name':'resume.txt','mimeType':'text/plain','buffer':b'I am a platform product manager. I owned the product roadmap for reusable capabilities.'});page.wait_for_function("document.querySelector('#cv-status').textContent.includes('Ready')")
+  self.assertIn('reusable capabilities',page.locator('#cv-text').input_value());page.locator('#cv-text').fill('I built reusable APIs and corrected this extracted text.')
   page.locator('#upload').click();self.assertIn('Only one CV',page.locator('#input-status').inner_text())
   page.once('dialog',lambda d:d.accept());page.locator('#clear-cv').click();self.assertIn('typed notes',page.locator('#story').input_value());self.assertFalse(page.locator('#cv-panel').is_visible())
   page.locator('#file').set_input_files({'name':'fake.pdf','mimeType':'application/pdf','buffer':b'not a pdf file'});page.wait_for_function("document.querySelector('#cv-panel').classList.contains('failed')");self.assertNotIn('Ready',page.locator('#cv-status').inner_text())
@@ -109,8 +117,8 @@ class CompleteFlow(unittest.TestCase):
  def test_normal_pdf_docx_and_mixed_input(self):
   from reportlab.pdfgen import canvas
   from docx import Document
-  pdf=ART/'resume.pdf';c=canvas.Canvas(str(pdf));c.drawString(72,760,'I built reusable APIs and investigated reliability incidents.');c.save()
-  doc=Document();doc.add_paragraph('I documented food safety procedures and improved kitchen menus.');doc.save(ART/'resume.docx')
+  pdf=ART/'resume.pdf';c=canvas.Canvas(str(pdf));c.drawString(72,760,'I am a platform product manager. I owned the product roadmap for reusable capabilities.');c.save()
+  doc=Document();doc.add_paragraph('I am an operations PM. I prioritised product requirements for operational workflows.');doc.save(ART/'resume.docx')
   assets=ART/'parser-assets';assets.mkdir(exist_ok=True)
   links={'mammoth.browser.min.js':'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.9.1/mammoth.browser.min.js','pdf.min.mjs':'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs','pdf.worker.min.mjs':'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs'}
   for name,url in links.items():
@@ -126,7 +134,7 @@ class CompleteFlow(unittest.TestCase):
    self.assertGreater(len(page.locator('#cv-text').input_value()),30)
    page.once('dialog',lambda d:d.accept());page.locator('#clear-cv').click()
   page.locator('#file').set_input_files(str(ART/'resume.docx'));page.wait_for_function("document.querySelector('#cv-status').textContent.includes('Ready')")
-  page.locator('#story').fill('I researched customer needs and tested prototypes for a scheduling tool.')
+  page.locator('#story').fill('I am a growth product manager. I owned scheduling-product onboarding and prioritised customer needs.')
   page.evaluate("document.querySelector('#voice-panel').classList.remove('hidden');document.querySelector('#voice-text').value='我协调交接流程并改进工作方式。';document.querySelector('#voice-text').dispatchEvent(new Event('input'))")
   kinds=page.evaluate('sources().map(s=>s.source_type)');self.assertEqual(set(kinds),{'cv','typed_story','voice_transcript'})
   page.locator('#generate').click();page.locator('#result-panel').wait_for(state='visible');self.assertEqual(page.evaluate('result.output_language'),'en');context.close()

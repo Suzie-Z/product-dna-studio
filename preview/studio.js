@@ -5,6 +5,7 @@ const exportCanvas=document.createElement('canvas');
 const API_ORIGIN=location.hostname==='product-dna-studio-preview.onrender.com'?'https://product-dna-studio-ai.onrender.com':'';
 const id=()=> 'src_'+crypto.randomUUID().replaceAll('-','');
 let sourceIds={story:id(),voice:id(),cv:id()},cvName='',reading=false,uploadRun=0,recognition=null,recording=false;
+let renderVariant=null;
 let result=null,busy=false,controller=null,corrections=[],pendingQuestion='',generationNumber=null;
 function event(){} // No visitor-level analytics or client tracking.
 function sources(){return [
@@ -23,7 +24,7 @@ function updateButtons(){
  $('generate').disabled=busy||reading||!canGenerate();$('save').disabled=busy||!result;
  for(const key of ['story','cv-text','voice-text','name','upload','voice','clear-cv','clear-voice','answer'])$(key).disabled=busy;
  $('cv-text').disabled=busy||reading;
- $('generate').textContent=busy?'Working…':result?'Regenerate My Career DNA':'Generate My Career DNA';
+ $('generate').textContent=busy?'Working…':result?'Regenerate My PM Career DNA':'Generate My PM Career DNA';
 }
 function sourceChanged(){
  corrections=[];pendingQuestion='';$('clarification').classList.add('hidden');
@@ -95,7 +96,7 @@ async function request(path,body){
 }
 async function run(kind,body){
  busy=true;controller=new AbortController();$('loading').classList.remove('hidden');$('generation-error').classList.add('hidden');$('step-two').classList.remove('hidden');updateButtons();
- $('loading-label').textContent='Reading your journey';const phases=['Identifying evidence-backed strengths','Designing your map'];let phase=0;
+ $('loading-label').textContent='Reading your PM journey';const phases=['Identifying evidence-backed PM capabilities','Designing your map'];let phase=0;
  const timer=setInterval(()=>{$('loading-label').textContent=phases[Math.min(phase++,1)]},8000);
  const timeout=setTimeout(()=>controller.abort(),240000);
  try{return await request('/api/career-dna/'+kind,body)}
@@ -114,7 +115,7 @@ async function generate(){
  if(data.map.status==='needs_more_info'){
   pendingQuestion=data.map.clarification_question;$('clarification-question').textContent=pendingQuestion;$('clarification').classList.remove('hidden');$('clarification-answer').focus();return;
  }
- result=data.map;generationNumber=data.generation_number??null;if(data.stats)showStats(data.stats);else loadStats();pendingQuestion='';$('clarification').classList.add('hidden');await renderResult();updateButtons();event('generation_succeeded');scrollToStep('result-panel');
+ result=data.map;renderVariant=nextPMVariant();generationNumber=data.generation_number??null;if(data.stats)showStats(data.stats);else loadStats();pendingQuestion='';$('clarification').classList.add('hidden');await renderResult();updateButtons();event('generation_succeeded');scrollToStep('result-panel');
 }
 $('generate').onclick=generate;
 $('answer').onclick=async()=>{const answer=$('clarification-answer').value.trim();if(!answer){$('clarification-answer').focus();return}corrections.push({source_id:id(),source_type:'typed_story',source_label:'Follow-up answer',content:answer});$('clarification-answer').value='';await generate()};
@@ -122,9 +123,9 @@ async function renderResult(){
  if(!result)return;
  $('generation-number').classList.toggle('hidden',!generationNumber);$('generation-number').textContent=generationNumber?'Generation #'+generationNumber:'';
  $('result-panel').classList.remove('hidden');$('save-status').textContent='';
- renderDNAMap($('map-visual'),result);
+ renderDNAMap($('map-visual'),result,renderVariant);
  $('full-journey').open=false;$('journey-evidence').replaceChildren();
- for(const [group,heading]of [['journey','Career Journey'],['strengths','Core Capabilities']]){
+ for(const [group,heading]of [['journey','PM Journey'],['strengths','Core Capabilities']]){
   const title=document.createElement('h4');title.textContent=heading;$('journey-evidence').append(title);
   for(const item of result[group]){
    const section=document.createElement('section'),h=document.createElement('h5'),note=document.createElement('p');h.textContent=item.label+(item.date_label?' · '+item.date_label:'');note.textContent=item.evidence_note;section.append(h,note);
@@ -135,17 +136,17 @@ async function renderResult(){
  const original=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Original experience';original.append(summary);
  for(const source of sources()){const heading=document.createElement('h5'),content=document.createElement('p');heading.textContent=source.source_label;content.textContent=source.content;content.className='original-context';original.append(heading,content)}
  $('journey-evidence').append(original);
- try{await renderDNAPoster(exportCanvas,result)}catch{$('save-status').textContent='The image could not render. Try generating again.'}
+ try{await renderDNAPoster(exportCanvas,result,renderVariant)}catch{$('save-status').textContent='The image could not render. Try generating again.'}
 }
 $('save').onclick=async()=>{
  if(!result||busy)return;
  busy=true;updateButtons();$('save-status').textContent='Preparing your image…';
  try{
-  const drawing=await renderDNAPoster(exportCanvas,result);
+  const drawing=await renderDNAPoster(exportCanvas,result,renderVariant);
   if(!drawing.ok)throw Error('Some wording is too long. Adjust your story and generate again.');
   const blob=await new Promise(resolve=>exportCanvas.toBlob(resolve,'image/png'));
   if(!blob)throw Error('Image export failed. Please try again.');
-  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='my-career-dna.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);$('save-status').textContent='Your Career DNA image is ready.';
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='my-pm-career-dna.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);$('save-status').textContent='Your PM Career DNA image is ready.';
  }catch(e){$('save-status').textContent=e.message}finally{busy=false;updateButtons()}
 };
 updateButtons();

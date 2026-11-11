@@ -1,11 +1,14 @@
-# Career DNA Studio
+# PM Career DNA
 
-A profession-agnostic, evidence-grounded career map studio. This upgrades the existing illustrated experience in place: lavender/cream/teal surfaces, soft cards, illustrated professional icons, and one illustrated gender-neutral human chibi.
+Current integrated release: see [PM_IMPLEMENTATION.md](docs/PM_IMPLEMENTATION.md). PM-only scope, PM branding/logo, six background themes, 24 avatar/icon libraries, stable per-result variants and single-image export are implemented.
+
+
+An evidence-grounded PM journey and capability map for internet/technology product managers. This upgrades the existing illustrated experience in place: lavender/cream/teal surfaces, soft cards, illustrated professional icons, and one of 24 neutral human chibi avatars with uniform cartoon skin material.
 
 ## Experience
 
-1. **Share Your Journey** — one CV (PDF/DOCX/TXT), editable voice transcript, and written notes in a combined workspace. Source IDs remain stable during the session. Common contact details are redacted server-side before model processing.
-2. **Discover Your Career DNA** — real structured OpenAI generation with **1–4 journey nodes and 1–4 strengths independently**, signature, superpower, and evidence links. Sparse or conflicting evidence prompts one question instead of filling slots. Undated material is shown as **Experience Areas**.
+1. **Share Your PM Journey** — one CV (PDF/DOCX/TXT), editable voice transcript, and written notes in a combined workspace. Source IDs remain stable during the session. Common contact details are redacted server-side before model processing.
+2. **Discover Your PM Career DNA** — real structured OpenAI generation with **1–4 evidenced PM role types and 1–4 transferable capabilities independently**, signature, superpower, and evidence links. Sparse or conflicting evidence prompts one question instead of filling slots. Undated material is shown as **Experience Areas**.
 3. **Download PNG** — one fixed high-resolution landscape map. To request changes, return to the original story input, add context or preferences, and generate again. There is no separate refinement form, manual map editor, format chooser, or third step.
 
 All exported text is English. Evidence quotes retain their source language internally. Exported visible graphics contain no raw quotes, source IDs, ratings, or contact details. Each illustrated category has a noneditable SVG tooltip with a brief English evidence explanation; no raw quotes are placed in the SVG. No generated likeness or inferred physical attributes are used.
@@ -28,7 +31,7 @@ Open `http://localhost:10000`. The API remains healthy without a key, but model 
 - `career_ai.py`: schema, prompts, source redaction, moderation, grounding and refinement merge.
 - `ai_server.py`: bounded JSON HTTP/CORS boundary and concurrency/rate controls.
 - `preview/studio.template.html`, `studio.css`, `studio.js`: maintainable frontend sources.
-- `preview/poster.js`: one controlled SVG scene with responsive desktop/mobile layouts, selectable text, illustrated rocky islands, a gender-neutral human chibi, and fixed 3200×2360 PNG export. User copy is XML-escaped; overlong text blocks download rather than clipping.
+- `preview/poster.js`: one controlled SVG scene with collision checks, responsive layouts, illustrated rocky islands, 24 PM icons and 24 neutral avatars, and fixed 3200×2580 PNG export. User copy is XML-escaped; overlong text blocks download rather than clipping.
 - `build_preview.py`: emits a self-contained `preview/index.html`, compatible with the current static host.
 
 Always rebuild the bundled HTML after frontend edits and commit source plus bundle.
