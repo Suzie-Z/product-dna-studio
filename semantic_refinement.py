@@ -110,6 +110,7 @@ def refine(previous,sources,message,context,intelligence=None,selected_version=N
    a.schema_validate(response,schema);a.english(response['change_summary'],220)
    if response['status']=='needs_more_info':
     if response['changes']:raise ValueError('clarification must not contain a patch')
+    a.english_field(response['clarification_question'],220,'/clarification_question')
     return {'map':a.clarification(response['clarification_question']),'accepted_source':None,'change_summary':response['change_summary']}
    if response['clarification_question']is not None:raise ValueError('ready patch must not ask a question')
    content_changes=[c for c in response['changes']if not c['path'].startswith('/visual/')];visual_changes=[c for c in response['changes']if c['path'].startswith('/visual/')]
