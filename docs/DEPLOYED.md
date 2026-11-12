@@ -1,3 +1,9 @@
+# Refinement reliability patch — published12 November2026
+
+[Live application](https://product-dna-studio-preview.onrender.com) · [verified changes and token costs](REFINEMENT_RELIABILITY_FIX.md). Runtime `0f5d51a72d30da9df0b05161abb175fb4513e8a4` is live on both services. Copied-text edits use field-scoped context; overlong copy is shortened before display. Real API and browser Refine → Version2 → PNG verification passed.
+
+---
+
 # Career Studio V2 — published 12 November 2026 (Australia/Sydney)
 
 https://product-dna-studio-preview.onrender.com
