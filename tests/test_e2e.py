@@ -97,6 +97,13 @@ class CompleteFlow(unittest.TestCase):
   page.evaluate("audioTask=sendRecording({blob:new Blob(['test'],{type:'audio/webm'}),id:requestId(),appended:false})")
   self.assertTrue(page.locator('#generate').is_disabled());self.assertTrue(page.locator('#voice-retry').is_visible());self.assertTrue(page.locator('#voice-discard').is_visible())
   page.locator('#voice-discard').click();self.assertFalse(page.locator('#generate').is_disabled());self.assertIn('platform',page.locator('#story').input_value());context.close()
+ def test_long_copy_is_shortened_before_display_without_regeneration(self):
+  page,context=self.page();posts=[]
+  def overlong(route):
+   r=route.fetch();body=r.json();body['map']['strengths'][0]['label']='W'*35;route.fulfill(response=r,json=body)
+  context.route('**/api/career-dna/generate',overlong);page.on('request',lambda r:posts.append(r.post_data_json)if r.url.endswith('/refine')else None)
+  page.locator('#story').fill('I am a platform product manager. I owned shared product requirements and customer discovery.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===1&&!busy')
+  self.assertEqual(page.evaluate('result.strengths[0].label'),'Applied Discovery');self.assertTrue(page.evaluate('exportCanvas.renderMetrics.ok'));self.assertEqual(len(posts),1);self.assertEqual(posts[0]['fit_fields'],['/strengths/k1/label']);self.assertNotIn('Regenerate for shorter wording',page.locator('#map-visual').inner_text());self.assertIn('Copy the exact text',page.locator('#story').get_attribute('placeholder'));context.close()
  def test_failed_update_preserves_map_and_retry_reuses_request(self):
   page,context=self.page();page.locator('#story').fill('I am a platform product manager. I owned roadmap and prioritised reusable capabilities for product teams.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===1&&!busy');before=page.evaluate('structuredClone(result)')
   seen=[]

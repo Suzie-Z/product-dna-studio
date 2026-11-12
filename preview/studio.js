@@ -20,7 +20,7 @@ function updateButtons(){
  $('generate').disabled=busy||reading||transcribing||voiceRequesting||Boolean(audioRetry)||!canGenerate();$('generate').textContent=busy?(operation==='refine'?'Updating...':'Analysing...'):activeVersion?'Refine My DNA':'Generate';
  for(const key of ['story','upload','replace-cv','clear-cv','voice','pause-voice','stop-voice','version-select','edit-map'])$(key).disabled=busy||reading||(['voice','pause-voice','stop-voice'].includes(key)&&(transcribing||voiceRequesting||Boolean(audioRetry)))||(key==='pause-voice'&&voiceStopping);
  $('voice-retry').disabled=busy||transcribing;$('voice-discard').disabled=busy||transcribing;$('save').disabled=busy||!result;$('undo').disabled=busy||!versions.some(v=>v.number===activeVersion?.parent_id);$('retry').disabled=busy;
- $('composer-label').textContent=activeVersion?'Refine your map':'Your career journey';$('story').placeholder=activeVersion?'Describe a change to your DNA map...':'Tell me about your career journey...';
+ $('composer-label').textContent=activeVersion?'Refine your map':'Your career journey';$('story').placeholder=activeVersion?'Example: Change “AI Product Judgement” to “Model Fit & Evaluation”. Copy the exact text, then say what you want instead. Long wording will be shortened to fit.':'Tell me about your career journey...';
 }
 function sourceChanged(){pendingRequest=null;$('generation-error').classList.add('hidden');$('retry').classList.add('hidden');updateButtons()}
 $('story').addEventListener('input',sourceChanged);
@@ -106,6 +106,16 @@ function requestedBase(message){
  const zh=message.match(/第([一二三四五六七八九十])版/);if(zh)numbers.push('一二三四五六七八九十'.indexOf(zh[1])+1);if(/original version|原版|初版/i.test(message))numbers.push(1);
  const unique=[...new Set(numbers)];if(unique.length>1)return {error:'Choose one base version for this update.'};if(!unique.length)return {version:activeVersion};const v=versions.find(v=>v.number===unique[0]);return v?{version:v}:{error:'That version is not in this session. Choose an available version.'};
 }
+async function fitMap(data,work){
+ for(let attempt=0;attempt<2;attempt++){
+  await pmFontsReady;const variant=work.variant||{},scenes=[buildDNAScene(data.map,false,variant),buildDNAScene(data.map,true,variant)],keys=[...new Set(scenes.flatMap(s=>s.metrics.overflowFields||[]))];if(!keys.length)return data;
+  const paths=keys.map(key=>{if(['signature','superpower'].includes(key))return '/'+(key==='signature'?'career_signature':key);const [id,field]=key.split(':');for(const group of ['journey','strengths'])if(data.map[group].some(i=>i.id===id))return '/'+group+'/'+id+'/'+(field.startsWith('highlight')?'highlights':field.startsWith('method')?'methods':field)}).filter(Boolean);
+  const src=clone(work.body.sources);if(data.accepted_source&&!src.some(s=>s.source_id===data.accepted_source.source_id))src.push(data.accepted_source);
+  const fitted=await run('refine',{sources:src,previous:data.map,message:'Shorten the specified wording to fit the existing design. Keep all other content and facts unchanged.',fit_fields:[...new Set(paths)],context_consent:true,map_version:work.base||1,next_version:Math.max(2,versionSerial+1),request_id:requestId()});if(!fitted)return null;if(fitted.map.status!=='ready'){showError('This wording could not fit yet. Your previous map is unchanged.');return null}data={...data,map:fitted.map};
+ }
+ if([false,true].every(m=>!buildDNAScene(data.map,m,work.variant||{}).metrics.overflowFields.length))return data;
+ showError('This wording needs a shorter phrase. Copy it into the composer and tell us what to change.');return null;
+}
 async function generate(retry=false){
  if(busy||reading||transcribing||voiceRequesting||audioRetry||(!retry&&!canGenerate()))return;busy=true;updateButtons();await finishVoice();busy=false;if(audioRetry){status('Retry or discard the recording before continuing.');updateButtons();return}
  let work=pendingRequest;
@@ -117,7 +127,8 @@ async function generate(retry=false){
   if(base)Object.assign(body,{previous:clone(base.map),map_version:base.number,career_intelligence:base.intelligence,message:$('story').value.trim()||'Use my newly uploaded CV to update the existing map. Preserve unchanged facts and clarify conflicts.',context_consent:true});
   work={kind,body,base:base?.number??null,variant:base?clone(base.variant):null,cv:base&&!cvDirty?clone(base.cv):{name:cvName,text:cvText,id:cvId}};pendingRequest=work;
  }
- if(!work){updateButtons();return}scrollToStep('step-two');const data=await run(work.kind,work.body);if(!data)return;
+ if(!work){updateButtons();return}scrollToStep('step-two');let data=await run(work.kind,work.body);if(!data)return;
+ if(data.map.status==='ready'){data=await fitMap(data,work);if(!data)return;}
  if(data.map.status==='needs_more_info'){pendingQuestion=data.map.clarification_question;$('clarification-question').textContent=pendingQuestion;$('clarification').classList.remove('hidden');pendingRequest=null;scrollToStep('step-one');$('story').focus();return}
  if(work.base!==null&&data.base_version!==work.base){showError('This update belongs to a different version. Restore your preferred version and retry.');return}
  const src=clone(work.body.sources);if(data.accepted_source&&!src.some(s=>s.source_id===data.accepted_source.source_id))src.push(data.accepted_source);

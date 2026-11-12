@@ -21,6 +21,20 @@ class V2Contracts(unittest.TestCase):
    expected=copy.deepcopy(previous);actual=copy.deepcopy(out['map'])
    for key in ['highlights','evidence_quotes','evidence_refs']:actual['journey'][1][key]=expected['journey'][1][key]
    self.assertEqual(actual,expected);self.assertIn(out['accepted_source']['source_id'],out['map']['journey'][1]['evidence_refs'])
+ def test_copied_sentence_scopes_schema_and_reduces_context(self):
+  previous=make_map(3,3);phrase=previous['strengths'][0]['description'];seen={}
+  def reply(payload,schema,prompt,**kwargs):
+   seen.update(payload=payload,schema=schema,prompt=prompt)
+   return {'status':'ready','changes':[{'path':'/strengths/k1/description','value':'Diagnoses onboarding friction through research'}],'clarification_question':None,'change_summary':'Shortened only the requested sentence.'}
+  with patch('career_ai.moderate'),patch('career_ai.structured',side_effect=reply):out=a.process_refine({'sources':[SOURCE],'previous':previous,'message':'Change “'+phrase+'” to “Diagnoses onboarding friction through research”.','context_consent':True})
+  self.assertEqual(len(seen['payload']['previous']['strengths']),1);self.assertEqual(seen['payload']['previous']['journey'],[]);self.assertLess(len(seen['prompt']),len(a.PROMPT));self.assertEqual(out['map']['journey'],previous['journey']);self.assertEqual(out['map']['strengths'][1:],previous['strengths'][1:])
+  branches=seen['schema']['properties']['changes']['items']['anyOf'];self.assertEqual([p for b in branches for p in b['properties']['path']['enum']],['/strengths/k1/description'])
+ def test_old_literal_detail_quote_does_not_need_new_excerpt_enum(self):
+  previous=make_map(1,1);sources=[SOURCE];schema=edit.patch_schema(previous,sources);q={'source_id':SOURCE['source_id'],'quote':SOURCE['content'][10:60]};value=[{'label':'Evidence-led decisions','evidence_quote':q}];response={'status':'ready','changes':[{'path':'/journey/j1/highlights','value':value}],'clarification_question':None,'change_summary':'Updated the requested highlight.'};a.schema_validate(response,schema);self.assertEqual(edit.merge(previous,response['changes'],sources)['journey'][0]['highlights'],value)
+ def test_repeated_updates_keep_detail_proofs_within_parent_bound(self):
+  previous=make_map(1,1);previous['journey'][0]['evidence_quotes']=[{'source_id':SOURCE['source_id'],'quote':SOURCE['content'][i:i+50]}for i in range(6)]
+  out=edit.merge(previous,[{'path':'/journey/j1/highlights','value':previous['journey'][0]['highlights']}],[SOURCE]);self.assertLessEqual(len(out['journey'][0]['evidence_quotes']),6)
+  for detail in out['journey'][0]['highlights']:self.assertIn(detail['evidence_quote'],out['journey'][0]['evidence_quotes'])
  def test_typed_patch_rejects_unknown_paths_values_and_nested_array_indices(self):
   schema=edit.patch_schema(safety_map(),[SOURCE])
   for change in [{'path':'/journey/j2/highlights/0/label','value':'Test'},{'path':'/strengths/k1/label','value':99},{'path':'/__proto__','value':'evil'}]:

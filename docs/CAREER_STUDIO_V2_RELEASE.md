@@ -1,3 +1,13 @@
+# Refinement reliability patch — 12 November 2026
+
+- The Refine composer now gives an English copy-and-replace example using the original phrase and intended replacement. Long replacements are summarised to the existing field limits.
+- Unique quoted phrases resolve to a single allowlisted field. The model receives only that item and associated evidence rather than a complete CV/map, plus a compact edit prompt. Other fields are copied unchanged.
+- Refinement no longer requires old valid literal quotes to appear in newly sampled citation enums. Source-ID bounds and independent original-text validation still apply. Repeated edits retain necessary detail proofs and the original anchor within the six-quote bound.
+- Text overflow is measured on both desktop and mobile before a new result replaces the old map. A bounded, field-only shortening request runs when required; it keeps existing factual citations. The old in-image “Regenerate for shorter wording” placeholder is removed. Three-line capability titles have reserved space with no icon/text collision.
+- Refinement remains an AI call and consumes tokens; small edits avoid the two-stage career-generation pipeline. Optional shortening/validation repair can require an additional small call. No model, public quota or infrastructure plan was changed.
+
+---
+
 # Career Studio V2 — verified release
 
 Published 12 November 2026 (Australia/Sydney).

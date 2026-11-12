@@ -366,7 +366,7 @@ def process_refine(body):
  if CREDENTIAL.search(message)and REQUEST_CLAIM.search(message)and not re.search(r'\b(?:remove|delete|omit|correct)\b|删除|去掉|纠正',message,re.I)and not has_credential_evidence(sources):
   return {'map':clarification('What qualification and relevant experience support that credential?'),'change_summary':'That credential needs supporting evidence. Your existing map is unchanged.','accepted_source':None}
  from semantic_refinement import refine
- return refine(previous,sources,message,body.get('clarification_context',''),body.get('career_intelligence'),body.get('map_version'))
+ return refine(previous,sources,message,body.get('clarification_context',''),body.get('career_intelligence'),body.get('map_version'),body.get('fit_fields'))
 
 def process_review(body):
  if body.get('context_consent')is not True:raise AppError(400,'Allow source context to be resent for the edited export review.','consent_required')
