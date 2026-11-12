@@ -61,19 +61,27 @@ def merge(previous,changes,sources):
  return a.validate_map(result,sources)
 
 def quoted_targets(previous,message):
- if not re.search(r'change|replace|rename|rewrite|shorten|edit|update|改|换|缩短|精简|修改|调整',message,re.I):return set()
- phrases=re.findall(r"[\"'“「](.+?)[\"'”」]",message)
- paths=set()
+ if not re.search(r'change|replace|rename|rewrite|shorten|edit|update|use|改|换|缩短|精简|修改|调整',message,re.I):return set()
+ phrases=re.findall(r"[\"'“「](.+?)[\"'”」]",message);matches=[]
  for phrase in phrases:
   for key in ['career_signature','superpower']:
-   if a.normalized(phrase)==a.normalized(previous[key]):paths.add('/'+key)
+   if a.normalized(phrase)==a.normalized(previous[key]):matches.append(('/'+key,None))
   for group in ['journey','strengths']:
    for item in previous[group]:
     for field in ['label','description']:
-     if a.normalized(phrase)==a.normalized(item[field]):paths.add('/'+group+'/'+item['id']+'/'+field)
+     if a.normalized(phrase)==a.normalized(item[field]):matches.append(('/'+group+'/'+item['id']+'/'+field,(group,item)))
     field='highlights'if group=='journey'else'methods'
-    if any(a.normalized(phrase)==a.normalized(d['label'])for d in item.get(field,[])):paths.add('/'+group+'/'+item['id']+'/'+field)
- return paths if len(paths)==1 else set()
+    if any(a.normalized(phrase)==a.normalized(d['label'])for d in item.get(field,[])):matches.append(('/'+group+'/'+item['id']+'/'+field,(group,item)))
+ unique={path:target for path,target in matches}
+ if len(unique)!=1:return set()
+ path,target=next(iter(unique.items()))
+ if path.endswith('/label')and target:
+  # A quoted heading can address its card/role; it does not imply a rename.
+  direct=bool(re.search(r'\brename\b',message,re.I)or(len(phrases)>=2 and re.search(r'\b(?:change|replace)\b.*?\b(?:to|with)\b|改成|改为|替换为',message,re.I)))
+  if not direct:
+   group,item=target;fields=['label','description','highlights'if group=='journey'else'methods','evidence_note','evidence_refs','evidence_quotes']
+   return {'/'+group+'/'+item['id']+'/'+field for field in fields}
+ return {path}
 
 def scoped_schema(schema,paths):
  out=copy.deepcopy(schema);branches=[]

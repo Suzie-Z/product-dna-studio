@@ -41,3 +41,6 @@ body{background:#fff;background-image:none}.primary{background:linear-gradient(1
 @media(min-width:1001px){.career-map{width:min(100%,calc((100svh - 210px)*16/9));min-width:900px}.result-heading,.result-actions,.full-journey{max-width:min(100%,calc((100svh - 210px)*16/9))}}
 
 body{font-family:PMDNABody,system-ui,sans-serif}.hero h1,.wordmark,.step-heading h2{font-family:PMDNAHeading,system-ui,sans-serif;letter-spacing:-1px}.hero h1{font-weight:600}.wordmark{font-size:clamp(22px,2.5vw,32px)}
+
+/* AA-readable controls and hints, retaining the established blue/teal family. */
+.primary{background:linear-gradient(125deg,#1977b3,#117d73)}textarea::placeholder{color:#796781}.eyebrow{color:#766184}

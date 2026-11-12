@@ -17,6 +17,9 @@ class HandoffContracts(unittest.TestCase):
   previous=make_map();response={'status':'ready','changes':[{'path':'/strengths/k1/label','value':'Growth Judgement'},{'path':'/visual/softness','value':'soft'}],'clarification_question':None,'change_summary':'Updated the title and softened the palette.'}
   with patch('career_ai.moderate'),patch('career_ai.structured',return_value=response):out=a.process_refine({'sources':[SOURCE],'previous':previous,'message':'Change “Growth Experimentation” to “Growth Judgement” and soften the colors.','context_consent':True})
   self.assertEqual(out['map']['strengths'][0]['label'],'Growth Judgement');self.assertEqual(out['presentation_patch'],{'softness':'soft'});self.assertEqual(out['map']['journey'],previous['journey'])
+ def test_quoted_heading_can_address_the_insight_beneath_it(self):
+  from semantic_refinement import quoted_targets
+  previous=make_map();paths=quoted_targets(previous,'Rewrite only the insight sentence under “Systems Design” using my actual evidence.');self.assertIn('/strengths/k2/description',paths);self.assertFalse(any('/k1/'in p for p in paths));self.assertEqual(quoted_targets(previous,'Change “Systems Design” to “Platform Judgement”.'),{'/strengths/k2/label'})
  def test_invalid_asset_ids_css_and_target_ids_are_rejected(self):
   for operation in [{'path':'/visual/icons/k1','value':'https://evil.example/icon.svg'},{'path':'/visual/theme_id','value':'background:red'},{'path':'/visual/platforms/unknown','value':'garden'},{'path':'/visual/pathway_id','value':'invented'}]:
    with self.assertRaises(ValueError):visuals.apply({},[operation],make_map())
