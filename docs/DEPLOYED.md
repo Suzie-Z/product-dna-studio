@@ -1,3 +1,11 @@
+# PM Career Studio handoff — published 12 November 2026
+
+Runtime `717d3961f6246c5fc3332defe86763fde1f9ba18` is live on both services. **108 tests passed**, plus live provider/browser refinement, Undo and single-PNG export checks. [Delivery report and remaining limits](PM_STUDIO_HANDOFF_DELIVERY.md).
+
+[Open application](https://product-dna-studio-preview.onrender.com). Models and public quotas remain unchanged; internal tests did not increase public counts.
+
+---
+
 # Career-fact validation patch — published12 November2026
 
 Backend `db6dcf78f0aa7a6b557b0f68b2d06c6d9e9918b3` is live.96 automated tests and two real Astra generations passed. [Cause, fixes and verification](FACT_VALIDATION_FIX.md). Frontend, model selections and quota are unchanged.
