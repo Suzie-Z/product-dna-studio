@@ -6,7 +6,7 @@ Published status: see [DEPLOYED.md](DEPLOYED.md). The steps below also describe 
 
 The working branch is `pm-career-dna-live`, published to existing `main` (static frontend) and `ai-experience` (API) branches. Historical `career-dna-release` notes below are not the current source of truth. No key is tracked. The Blueprint remains paused; this update uses the existing services and merges only targeted environment keys rather than applying infrastructure changes.
 
-- `OPENAI_CAREER_MODEL=gpt-6.1-sol`: dedicated career generation/refinement selection. Existing `OPENAI_MODEL=gpt-5` is retained as a fallback only when the dedicated variable is unset; this is not automatic failover.
+- `OPENAI_CAREER_MODEL=gpt-6-astra`: dedicated career interpretation/extraction selection. `OPENAI_SUMMARY_MODEL=gpt-6-astra` and `OPENAI_REFINEMENT_MODEL=gpt-6-astra` independently select the other text stages. `OPENAI_TRANSCRIPTION_MODEL=gpt-transcribe` selects original-language multilingual transcription. Existing `OPENAI_MODEL=gpt-5` is retained as a fallback only when the dedicated variable is unset; this is not automatic failover.
 - `PM_INTERNAL_TEST_TOKEN`: server-only generated secret for authenticated production testing/diagnostics. Never put it in the frontend or public docs.
 - `PUBLIC_COUNTER_ENV=production`: set only on the real production API. Local/staging defaults must not count.
 - Existing `OPENAI_API_KEY`, `COUNTER_DATABASE_URL`, daily provider-attempt quota and trial date are preserved.

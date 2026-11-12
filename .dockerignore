@@ -6,3 +6,10 @@
 !preview/**
 !generation_counts.py
 !requirements.txt
+!career_pipeline.py
+!semantic_refinement.py
+!model_config.py
+!request_state.py
+!voice_input.py
+!skills/
+!skills/**

@@ -1,3 +1,15 @@
+# Career Studio V2 — published 12 November 2026 (Australia/Sydney)
+
+https://product-dna-studio-preview.onrender.com
+
+Runtime `e21394da064010e4392ed84665533f7eb2e11d72` is live on the existing services. All three text stages now use `gpt-6-astra`; multilingual voice uses `gpt-transcribe`. The preserved landing, semantic refinement, version branching, visual variation and one PNG download were verified.86 automated tests and real provider/browser verification passed. The production counter remains1 and legacy23 is preserved; the existing10-attempt limit is unchanged.
+
+See the [complete V2 release record](CAREER_STUDIO_V2_RELEASE.md) for actual model verification, latency/cost, the Trust & Safety regression, privacy, screenshots and limits. No further user configuration is required.
+
+---
+
+## Historical releases
+
 # Career Studio architecture enhancement — published 11 November 2026 (Australia/Sydney)
 
 https://product-dna-studio-preview.onrender.com
