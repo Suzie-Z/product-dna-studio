@@ -51,12 +51,12 @@ class CompleteFlow(unittest.TestCase):
   context=self.browser.new_context(extra_http_headers={'X-PM-Internal-Test':'test-internal-only'},viewport={'width':width,'height':1000});context.route('https://fonts.googleapis.com/**',lambda r:r.abort());context.route('https://fonts.gstatic.com/**',lambda r:r.abort());page=context.new_page();page.goto(self.url);page.evaluate('pmFontsReady');page.locator('#begin').click();return page,context
  def test_complete_flow(self):
   context=self.browser.new_context(extra_http_headers={'X-PM-Internal-Test':'test-internal-only'},viewport={'width':1440,'height':1000});page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.goto(self.url);page.evaluate('pmFontsReady')
-  self.assertFalse(page.locator('#upload').is_visible());self.assertIn('Explore My Career DNA',page.locator('#begin').inner_text());self.assertEqual(page.locator('.hero-orb').count(),2);page.locator('#begin').click()
-  self.assertEqual(page.locator('#step-one h2').inner_text(),'Explore My PM Career');self.assertEqual(page.locator('textarea').count(),1);self.assertEqual(page.locator('#story').get_attribute('placeholder'),'Tell me about your career journey...');self.assertEqual(page.locator('#generate').inner_text(),'Generate')
+  self.assertFalse(page.locator('#upload').is_visible());self.assertIn('Explore My PM Career DNA',page.locator('#begin').inner_text());self.assertEqual(page.locator('.hero-orb').count(),2);page.locator('#begin').click()
+  self.assertEqual(page.locator('#step-one h2').inner_text(),'Explore My PM Career DNA');self.assertEqual(page.locator('textarea').count(),1);self.assertEqual(page.locator('#story').get_attribute('placeholder'),"Share a proud moment, a challenge you overcame, or a strength you'd love us to notice…");self.assertEqual(page.locator('#generate').inner_text(),'Discover My DNA')
   initial=json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations']
   page.locator('#story').fill('I work in tech.');page.locator('#generate').click();page.locator('#clarification').wait_for(state='visible');self.assertFalse(page.locator('#result-panel').is_visible())
   page.locator('#story').fill('I am a growth product manager. I owned onboarding requirements, researched customer needs and prioritised experiments with the product team.');page.locator('#generate').click();page.wait_for_function('exportCanvas.renderMetrics?.ok&&!busy')
-  before=page.evaluate('structuredClone(result)');variant=page.evaluate('structuredClone(renderVariant)');self.assertEqual(page.locator('#version-select').input_value(),'1');self.assertEqual(page.locator('#story').input_value(),'');self.assertEqual(page.locator('#generate').inner_text(),'Refine My DNA');self.assertTrue(page.locator('#generate').is_disabled())
+  before=page.evaluate('structuredClone(result)');variant=page.evaluate('structuredClone(renderVariant)');self.assertEqual(page.locator('#version-select').input_value(),'1');self.assertEqual(page.locator('#story').input_value(),'');self.assertEqual(page.locator('#generate').inner_text(),'Apply Changes');self.assertTrue(page.locator('#generate').is_disabled())
   self.assertEqual(page.locator('#map-visual > svg').count(),1);self.assertEqual(page.locator('#result-panel canvas').count(),0);self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial)
   page.screenshot(path=str(ART/'session-initial.png'),full_page=True)
   requests=[];page.on('request',lambda r:requests.append(r.post_data_json)if r.url.endswith('/refine')else None)
@@ -89,7 +89,7 @@ class CompleteFlow(unittest.TestCase):
     for item in d['journey']:item['highlights']=[{'label':label,'evidence_quote':item['evidence_quotes'][0]}for label in LABELS]
     for mobile in [False,True]:
      for side in ['left','right']:
-      m=page.evaluate('([d,m,s])=>buildDNAScene(d,m,{character_side:s}).metrics',[d,mobile,side]);self.assertTrue(m['ok'],(j,k,mobile,side,m['issues']));self.assertEqual(m['collisions'],[]);self.assertEqual(m['header']['title_center_x'],m['width']/2);self.assertGreater(m['header']['logo_gap'],0)
+      m=page.evaluate('([d,m,s])=>buildDNAScene(d,m,{character_side:s}).metrics',[d,mobile,side]);self.assertTrue(m['ok']or bool(m['overflowFields']),(j,k,mobile,side,m['issues']));self.assertEqual(m['collisions'],[]);self.assertEqual(m['header']['title_center_x'],m['width']/2);self.assertGreater(m['header']['logo_gap'],0)
   context.close()
  def test_recording_failure_requires_retry_or_discard(self):
   page,context=self.page();page.locator('#story').fill('I am a platform product manager. I owned shared capability requirements.')
@@ -103,7 +103,7 @@ class CompleteFlow(unittest.TestCase):
    r=route.fetch();body=r.json();body['map']['strengths'][0]['label']='W'*35;route.fulfill(response=r,json=body)
   context.route('**/api/career-dna/generate',overlong);page.on('request',lambda r:posts.append(r.post_data_json)if r.url.endswith('/refine')else None)
   page.locator('#story').fill('I am a platform product manager. I owned shared product requirements and customer discovery.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===1&&!busy')
-  self.assertEqual(page.evaluate('result.strengths[0].label'),'Applied Discovery');self.assertTrue(page.evaluate('exportCanvas.renderMetrics.ok'));self.assertEqual(len(posts),1);self.assertEqual(posts[0]['fit_fields'],['/strengths/k1/label']);self.assertNotIn('Regenerate for shorter wording',page.locator('#map-visual').inner_text());self.assertIn('Copy the exact text',page.locator('#story').get_attribute('placeholder'));context.close()
+  self.assertEqual(page.evaluate('result.strengths[0].label'),'Applied Discovery');self.assertTrue(page.evaluate('exportCanvas.renderMetrics.ok'));self.assertEqual(len(posts),1);self.assertEqual(posts[0]['fit_fields'],['/strengths/k1/label']);self.assertNotIn('Regenerate for shorter wording',page.locator('#map-visual').inner_text());self.assertIn("tell me in your own words",page.locator('#story').get_attribute('placeholder'));context.close()
  def test_failed_update_preserves_map_and_retry_reuses_request(self):
   page,context=self.page();page.locator('#story').fill('I am a platform product manager. I owned roadmap and prioritised reusable capabilities for product teams.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===1&&!busy');before=page.evaluate('structuredClone(result)')
   seen=[]

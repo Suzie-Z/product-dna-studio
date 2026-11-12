@@ -24,6 +24,8 @@ def patch_schema(previous,sources):
   branches.append(a.obj({'path':{'type':'string','enum':['/'+('journey_order'if group=='journey'else'strength_order')]},'value':a.array({'type':'string','enum':ids},4,1)}))
  for key in ['career_signature','superpower','journey_type']:
   branches.append(a.obj({'path':{'type':'string','enum':['/'+key]},'value':a.SCHEMA['properties'][key]}))
+ from visual_catalog import branches as visual_branches
+ branches+=visual_branches(previous)
  return a.obj({'status':{'type':'string','enum':['ready','needs_more_info']},'changes':a.array({'anyOf':branches},32),'clarification_question':a.text(220,True),'change_summary':a.text(220)})
 
 def merge(previous,changes,sources):
@@ -82,12 +84,13 @@ def scoped_schema(schema,paths):
  out['properties']['changes']['items']['anyOf']=branches
  return out
 
-def refine(previous,sources,message,context,intelligence=None,selected_version=None,fit_fields=None):
+def refine(previous,sources,message,context,intelligence=None,selected_version=None,fit_fields=None,visual=None,edit_history=None,original_visual=None):
  if not isinstance(context,str)or len(context)>2000:raise a.AppError(400,'The update context is too long.','invalid_context')
  correction={'source_id':'src_'+secrets.token_hex(8),'source_type':'typed_story','source_label':'User-provided correction or instruction','content':a.clean_source(message.strip())};sources=a.sources_from_request(sources+[correction]);a.moderate('\n'.join(s['content']for s in sources));schema=patch_schema(previous,sources)
  payload={'selected_version':selected_version,'sources':sources,'previous':previous,'refinement_request':correction['content'],'clarification_context':context,'editable_sections':{'journey':[{'id':i['id'],'label':i['label'],'two_lines_field':'highlights'}for i in previous['journey']],'strengths':[{'id':i['id'],'label':i['label']}for i in previous['strengths']]}};last=''
  paths=set(fit_fields or[])or quoted_targets(previous,message)
  if paths:
+  if not fit_fields:paths.update(p for b in schema['properties']['changes']['items']['anyOf']for p in b['properties']['path']['enum']if p.startswith('/visual/'))
   schema=scoped_schema(schema,paths)
   selected={g:[i for i in previous[g]if any(p.startswith('/'+g+'/'+i['id']+'/')for p in paths)]for g in ['journey','strengths']}
   payload['previous']={**selected,**{k:previous[k]for k in ['career_signature','superpower']if '/'+k in paths}}
@@ -95,8 +98,12 @@ def refine(previous,sources,message,context,intelligence=None,selected_version=N
   snippets={sid:list(dict.fromkeys(q['quote']for items in selected.values()for i in items for q in i['evidence_quotes']if q['source_id']==sid))for sid in ids}
   payload['sources']=[{**s,'content':'\n'.join(snippets[s['source_id']])}for s in sources if s['source_id']in snippets]+[correction]
   payload['editable_sections']={'allowed_paths':sorted(paths)}
- if fit_fields:payload['layout_instruction']='Shorten ONLY these fields into complete professional English. Labels <=24 characters; descriptions <=65; method labels <=19; highlights <=40. Preserve meaning and literal evidence. No clipped text or unfinished fragments.'
- prompt=PATCH_PROMPT+'\nFor copied original text and a requested replacement, edit only the matched field. If replacement is too long, summarise its professional meaning to fit. Keep labels concise and descriptions under65 characters when possible. Copy exact source quotes; they need not come from an enum. Do not change facts or award unsupported credentials.'
+ if fit_fields:payload['layout_instruction']='Shorten ONLY these fields into complete professional English. Labels <=26 characters; descriptions <=60; method labels <=20; highlights <=28 characters and at most five words on each line. Preserve meaning and literal evidence. No clipped text or unfinished fragments.'
+ from visual_catalog import MANIFEST,apply as apply_visual
+ payload['current_visual']=visual if isinstance(visual,dict)else{};payload['visual_manifest']={'platforms':[{k:p[k]for k in ['id','label','semantics']}for p in MANIFEST['platforms']],'pathways':[{k:p[k]for k in ['id','label']}for p in MANIFEST['pathways']],'icon_concepts':MANIFEST['concepts'],'theme_ids':MANIFEST['theme_ids']};payload['original_visual']=original_visual if isinstance(original_visual,dict)else{}
+ payload['edit_history']=[{'instruction':a.clean_source(str(h.get('instruction',''))[:1500]),'summary':a.clean_source(str(h.get('summary',''))[:220]),'visual':h.get('visual',{})if isinstance(h.get('visual'),dict)else{}}for h in edit_history[-4:]if isinstance(h,dict)]if isinstance(edit_history,list)else[]
+ payload['visual_targets']={g:[{'id':i['id'],'label':i['label'],'icon':i['icon']}for i in previous[g]]for g in ['journey','strengths']}
+ prompt=PATCH_PROMPT+'\nVISUAL EDITS: Interpret arbitrary freeform visual instructions and follow-ups using the current visual state, original visual, history and manifest. Return /visual patches for themes, contrast, softness, one or all icons/platforms, pathway, mascot, density or character side. Warm peach, less purple, more mint, higher contrast must change semantic theme tokens. For a protection symbol without a shield, choose strategy/compass or collaboration/protective-community, not trust_safety. Never add invented asset IDs, URLs or SVG. Change only what is requested, including mixed text/visual requests. Visual-only changes must not modify career claims or citations. Use original state/reset_icons to honour original-icons requests. Describe an unavailable asset honestly or ask a targeted question; do not pretend to generate it. Only bounded layout controls exist: compact/comfortable spacing, character side and visibility. Arbitrary freehand positions and custom grids are unavailable; for an exact unsupported layout ask a focused question with truthful alternatives rather than claiming success. Never expose internal IDs in the summary. For compact layout shorten copy only when requested; no coaching, action plan or future DNA.'+'\nFor copied original text and a requested replacement, edit only the matched field. If replacement is too long, summarise its professional meaning to fit. Keep labels concise and descriptions under65 characters when possible. Copy exact source quotes; they need not come from an enum. Do not change facts or award unsupported credentials.'
  for _ in range(2):
   response=a.structured(payload,schema,prompt,stage='refinement')
   try:
@@ -105,12 +112,14 @@ def refine(previous,sources,message,context,intelligence=None,selected_version=N
     if response['changes']:raise ValueError('clarification must not contain a patch')
     return {'map':a.clarification(response['clarification_question']),'accepted_source':None,'change_summary':response['change_summary']}
    if response['clarification_question']is not None:raise ValueError('ready patch must not ask a question')
-   result=merge(previous,response['changes'],sources)
+   content_changes=[c for c in response['changes']if not c['path'].startswith('/visual/')];visual_changes=[c for c in response['changes']if c['path'].startswith('/visual/')]
+   result=merge(previous,content_changes,sources)if content_changes else copy.deepcopy(previous)
+   next_visual,presentation=apply_visual(visual,visual_changes,previous)
    if fit_fields and any(correction['source_id']in i['evidence_refs']for g in ['journey','strengths']for i in result[g]):raise ValueError('Layout shortening must retain existing factual citations, not cite the formatting instruction')
    if result['status']!='ready':return {'map':result,'accepted_source':None,'change_summary':'One detail will help.'}
    a.moderate('\n'.join(a.export_strings(result)))
    ledger=copy.deepcopy(intelligence)if isinstance(intelligence,dict)else None
-   if ledger is not None:ledger.setdefault('updates',[]).append({'source_id':correction['source_id'],'change_summary':response['change_summary'],'changed_fields':[c['path']for c in response['changes']]})
-   return {'map':result,'accepted_source':correction,'changed_fields':[c['path']for c in response['changes']],'change_summary':response['change_summary'],'career_intelligence':ledger,'patch':response['changes']}
+   if ledger is not None and content_changes:ledger.setdefault('updates',[]).append({'source_id':correction['source_id'],'change_summary':response['change_summary'],'changed_fields':[c['path']for c in response['changes']]})
+   return {'map':result,'accepted_source':None if visual_changes and not content_changes else correction,'changed_fields':[c['path']for c in response['changes']],'change_summary':response['change_summary'],'career_intelligence':ledger,'patch':response['changes'],'presentation_patch':presentation,'visual_only':bool(visual_changes and not content_changes)}
   except (ValueError,KeyError,TypeError)as e:last=str(e)[:220];payload['validation_feedback']={'issue':last,'instruction':'Repair the patch internally. Keep original intent and unrelated fields; use stable IDs and exact source quotes.'};payload['previous_patch']=response
- failure=a.AppError(502,'The update did not pass structural checks. Your previous version is safe; retry this request.','ungrounded_refinement');failure.validation_issue=last;raise failure
+ failure=a.AppError(502,"We couldn't apply that change yet. Your current version is still here. Try again or describe the part to adjust.",'ungrounded_refinement');failure.validation_issue=last;raise failure
