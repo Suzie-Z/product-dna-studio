@@ -12,7 +12,7 @@ def model_transport(path,payload,timeout=90):
  if path=='moderations':return {'results':[{'flagged':'TEST_UNSAFE' in payload['input']}]}
  data=json.loads(payload['input'][-1]['content'])
  if 'export_review'in data:return {'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':json.dumps({'english_only':True})}]}]}
- src=data['sources'][0];quote=src['content'][:min(120,len(src['content']))]
+ src=data['sources'][0];quote=career_ai.generation_schema([src])['properties']['journey']['items']['properties']['evidence_quotes']['items']['anyOf'][0]['properties']['quote']['enum'][0]
  if 'previous'in data:
   previous=copy.deepcopy(data['previous']);request=data['refinement_request'].lower()
   if 'certified surgeon'in request:
@@ -21,7 +21,9 @@ def model_transport(path,payload,timeout=90):
    previous['strengths'][0]['label']='Applied Discovery'
    # Deliberately unrelated model drift: the server must NOT copy this field.
    previous['superpower']='An unrelated change that should never be accepted'
-   response={'map':previous,'changed_fields':['/strengths/'+previous['strengths'][0]['id']+'/label'],'change_summary':'Shortened the first strength while keeping the rest unchanged.'}
+   response={'status':'ready','changes':[{'path':'/strengths/'+previous['strengths'][0]['id']+'/label','value':'Applied Discovery'}],'clarification_question':None,'change_summary':'Shortened the first strength while keeping the rest unchanged.'}
+ elif 'career_facts' not in data:
+  response={'status':'ready','facts':[{'id':'f1','claim':'Owned product decisions and prioritisation','role_type':'Growth PM','ownership':'owned','evidence_quotes':[{'source_id':src['source_id'],'quote':quote}]}],'clarification_question':None}
  else:
   d=make_map(3,3)
   for group in ['journey','strengths']:
@@ -54,7 +56,7 @@ class CompleteFlow(unittest.TestCase):
   initial=json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations']
   page.locator('#story').fill('I work in tech.');page.locator('#generate').click();page.locator('#clarification').wait_for(state='visible');self.assertFalse(page.locator('#result-panel').is_visible())
   page.locator('#story').fill('I am a growth product manager. I owned onboarding requirements, researched customer needs and prioritised experiments with the product team.');page.locator('#generate').click();page.wait_for_function('exportCanvas.renderMetrics?.ok&&!busy')
-  before=page.evaluate('structuredClone(result)');variant=page.evaluate('structuredClone(renderVariant)');self.assertEqual(page.locator('#version-select').input_value(),'1');self.assertEqual(page.locator('#story').input_value(),'');self.assertEqual(page.locator('#generate').inner_text(),'Update My DNA Map');self.assertTrue(page.locator('#generate').is_disabled())
+  before=page.evaluate('structuredClone(result)');variant=page.evaluate('structuredClone(renderVariant)');self.assertEqual(page.locator('#version-select').input_value(),'1');self.assertEqual(page.locator('#story').input_value(),'');self.assertEqual(page.locator('#generate').inner_text(),'Refine My DNA');self.assertTrue(page.locator('#generate').is_disabled())
   self.assertEqual(page.locator('#map-visual > svg').count(),1);self.assertEqual(page.locator('#result-panel canvas').count(),0);self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial)
   page.screenshot(path=str(ART/'session-initial.png'),full_page=True)
   requests=[];page.on('request',lambda r:requests.append(r.post_data_json)if r.url.endswith('/refine')else None)
@@ -67,11 +69,34 @@ class CompleteFlow(unittest.TestCase):
   with page.expect_download()as event:page.locator('#save').click()
   file=ART/'career-export.png';event.value.save_as(str(file));self.assertEqual(event.value.suggested_filename,'my-pm-career-dna.png')
   from PIL import Image
-  with Image.open(file)as image:self.assertEqual(image.size,(3200,2100))
+  with Image.open(file)as image:self.assertEqual(image.size,(3200,page.evaluate('exportCanvas.renderMetrics.height*2')))
   self.assertEqual(page.locator('#result-panel canvas').count(),0);self.assertEqual(json.load(urllib.request.urlopen(self.url+'/api/stats'))['total_generations'],initial)
   page.set_viewport_size({'width':390,'height':844});page.wait_for_function("document.querySelector('#map-visual').dataset.layout==='mobile'");self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'));self.assertTrue(page.locator('#map-visual').evaluate('(e)=>e.renderMetrics.ok'));self.assertEqual(page.evaluate('renderVariant'),variant)
   page.screenshot(path=str(ART/'session-mobile.png'),full_page=True);page.locator('#map-visual').screenshot(path=str(ART/'session-mobile-map.png'));self.assertFalse(errors,errors);self.assertEqual(page.evaluate('Object.keys(localStorage).length'),0)
   page.reload();self.assertEqual(page.evaluate('versions.length'),0);self.assertFalse(page.locator('#result-panel').is_visible());context.close()
+ def test_explicit_base_version_overrides_current_selection(self):
+  page,context=self.page();page.locator('#story').fill('I am a platform product manager. I owned shared product capabilities and roadmap priorities.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===1&&!busy');initial=page.evaluate('structuredClone(result)');variant=page.evaluate('structuredClone(renderVariant)')
+  page.locator('#story').fill('Rename the first capability to Applied Discovery.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===2&&!busy')
+  sent=[];page.on('request',lambda r:sent.append(r.post_data_json)if r.url.endswith('/refine')else None)
+  page.locator('#story').fill('For Version 1, rename only the first capability to Applied Discovery.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===3&&!busy')
+  self.assertEqual(sent[-1]['previous'],initial);self.assertEqual(sent[-1]['map_version'],1);self.assertEqual(page.evaluate('activeVersion.parent_id'),1);self.assertEqual(page.evaluate('renderVariant'),variant);context.close()
+ def test_full_highlights_header_safe_art_and_layout_variants(self):
+  from tests.test_v2 import LABELS
+  page,context=self.page()
+  for j in range(1,5):
+   for k in range(1,5):
+    d=make_map(j,k)
+    for item in d['journey']:item['highlights']=[{'label':label,'evidence_quote':item['evidence_quotes'][0]}for label in LABELS]
+    for mobile in [False,True]:
+     for side in ['left','right']:
+      m=page.evaluate('([d,m,s])=>buildDNAScene(d,m,{character_side:s}).metrics',[d,mobile,side]);self.assertTrue(m['ok'],(j,k,mobile,side,m['issues']));self.assertEqual(m['collisions'],[]);self.assertEqual(m['header']['title_center_x'],m['width']/2);self.assertGreater(m['header']['logo_gap'],0)
+  context.close()
+ def test_recording_failure_requires_retry_or_discard(self):
+  page,context=self.page();page.locator('#story').fill('I am a platform product manager. I owned shared capability requirements.')
+  context.route('**/api/transcribe',lambda r:r.fulfill(status=502,content_type='application/json',body='{"error":"Temporary transcription failure."}'))
+  page.evaluate("audioTask=sendRecording({blob:new Blob(['test'],{type:'audio/webm'}),id:requestId(),appended:false})")
+  self.assertTrue(page.locator('#generate').is_disabled());self.assertTrue(page.locator('#voice-retry').is_visible());self.assertTrue(page.locator('#voice-discard').is_visible())
+  page.locator('#voice-discard').click();self.assertFalse(page.locator('#generate').is_disabled());self.assertIn('platform',page.locator('#story').input_value());context.close()
  def test_failed_update_preserves_map_and_retry_reuses_request(self):
   page,context=self.page();page.locator('#story').fill('I am a platform product manager. I owned roadmap and prioritised reusable capabilities for product teams.');page.locator('#generate').click();page.wait_for_function('activeVersion?.number===1&&!busy');before=page.evaluate('structuredClone(result)')
   seen=[]
@@ -126,7 +151,7 @@ class CompleteFlow(unittest.TestCase):
      for item in d['strengths']:item['methods']=[{'label':label,'evidence_quote':item['evidence_quotes'][0]}for label in ['Golden-set evaluation','Reliability trade-offs','Controlled experiments'][:count]]
      for mobile in [False,True]:
       metrics=page.evaluate('([d,m])=>buildDNAScene(d,m).metrics',[d,mobile]);self.assertTrue(metrics['ok'],(j,k,count,mobile,metrics['issues']));self.assertEqual(metrics['collisions'],[])
-      if not mobile:self.assertLessEqual(metrics['height'],1100)
+      if not mobile:self.assertLessEqual(metrics['height'],1300)
   context.close()
  def test_real_benchmark_highlight_wraps_without_shrinking_or_overlap(self):
   page,context=self.page()
@@ -162,7 +187,7 @@ class CompleteFlow(unittest.TestCase):
   page.locator('#file').set_input_files({'name':'resume.txt','mimeType':'text/plain','buffer':b'I am a platform product manager. I owned the product roadmap for reusable capabilities.'});page.wait_for_function("document.querySelector('#cv-status').textContent.includes('Ready')")
   self.assertIn('reusable capabilities',page.evaluate('cvText'));self.assertEqual(page.locator('#cv-text').count(),0);self.assertNotIn('reusable capabilities',page.locator('body').inner_text());page.locator('#clear-cv').click();self.assertIn('typed notes',page.locator('#story').input_value())
   page.locator('#file').set_input_files({'name':'scan.pdf','mimeType':'application/pdf','buffer':b'not a pdf'});page.wait_for_function("document.querySelector('#cv-status').textContent.includes('Could not read')")
-  page.evaluate('window.SpeechRecognition=undefined;window.webkitSpeechRecognition=undefined');page.locator('#voice').click();self.assertIn('unavailable',page.locator('#input-status').inner_text())
+  page.evaluate('window.MediaRecorder=undefined;window.SpeechRecognition=undefined;window.webkitSpeechRecognition=undefined');page.locator('#voice').click();self.assertIn('unavailable',page.locator('#input-status').inner_text())
   page.add_script_tag(content="window.SpeechRecognition=class {start(){this.onstart();const a=[{transcript:'我研究用户需求并测试原型。'}];a.isFinal=true;this.onresult({resultIndex:0,results:[a]})} stop(){this.onend()}}")
   page.locator('#voice').click();self.assertIn('typed notes',page.locator('#story').input_value());self.assertIn('我研究',page.locator('#story').input_value());self.assertEqual(page.locator('textarea').count(),1)
   page.locator('#pause-voice').click();self.assertEqual(page.locator('#voice-status').inner_text(),'Paused');page.locator('#pause-voice').click();self.assertEqual(page.locator('#voice-status').inner_text(),'Listening…');page.locator('#stop-voice').click();self.assertEqual(page.locator('#voice-status').inner_text(),'')

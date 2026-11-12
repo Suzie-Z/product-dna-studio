@@ -57,7 +57,7 @@ Prefer `model capability boundaries`, `evaluation-led productisation`, `reliabil
 
 ### Journey highlights
 
-Each journey item now has a highlights array: choose 1–2 evidenced role highlights, each a concise professional phrase of at most30 characters (usually 2–4 words), with its own associated verbatim quote/source ID. These replace the generic description in the image, not add a duplicate paragraph. Prefer TWO complementary highlights when the evidence supports two: e.g. `Model capability boundaries` + `Evaluation-led rollout`; `Reusable product contracts` + `Reliability trade-offs`; `Abuse prevention` + `Enforcement & appeals`. At most one if evidence only supports one. Do not duplicate the role title or put methods unrelated to that role beneath it. The description remains a private/accessibility summary for older clients.
+Each journey item now has a highlights array: choose 1–2 evidenced role highlights, each a concise professional phrase of at most64 characters (usually 3–8 words), with its own associated verbatim quote/source ID. These replace the generic description in the image, not add a duplicate paragraph. Prefer TWO complementary highlights when the evidence supports two: e.g. `Model capability boundaries` + `Evaluation-led rollout`; `Reusable product contracts` + `Reliability trade-offs`; `Abuse prevention` + `Enforcement & appeals`. At most one if evidence only supports one. Do not duplicate the role title or put methods unrelated to that role beneath it. The description remains a private/accessibility summary for older clients.
 
 ### Capability judgement, not activity
 
@@ -91,3 +91,7 @@ Prefer 2–3 complementary concrete practices when the source contains that many
 This product targets PMs and concrete PM transitions, not generic career coaching. Keep prior engineering, consulting, data or operations roles truthful under their approved prior-role labels; never turn them into PM jobs. Infer transferable product capabilities cautiously from demonstrated work and mark inferred versus supported. Consolidate overlapping capabilities rather than filling four categories.
 
 For an update, use original sources plus the selected existing map and the latest instruction. Preserve unrelated content, IDs and factual scope. Retain visual configuration unless a supported visual preference was requested. A title rewrite or emphasis change is not new evidence. Ask one focused question when a correction conflicts with important facts or an asserted skill lacks evidence.
+
+## Capability hierarchy for V2
+
+Select Level 2 professional systems, frameworks and difficult product decisions first. Use Level 3 operational cases as supporting evidence rather than headline identity when stronger evidence exists. When a visitor explicitly states they constructed safety frameworks and created safety pipelines from zero to one, headline `Safety Framework Development` and `0-to-1 Safety Pipelines & Infrastructure`; do not reduce these to minor-protection or report-routing tasks. This is a phrasing example only; require the visitor’s own evidence. Explicit first-person corrections become additional source testimony. Requests to assume a credential or invent an achievement do not.

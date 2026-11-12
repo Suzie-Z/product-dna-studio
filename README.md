@@ -1,4 +1,4 @@
-# PM Career DNA
+# Career Studio
 
 An enhancement of the existing illustrated app: PM career intelligence, deterministic visuals and session-only conversational refinement. See [architecture and privacy](docs/CAREER_STUDIO_ARCHITECTURE.md), [visual acceptance standard](docs/PM_DNA_DELIVERY_STANDARD.md) and [observed live deployment](docs/DEPLOYED.md).
 
@@ -7,7 +7,7 @@ An enhancement of the existing illustrated app: PM career intelligence, determin
 1. Existing landing page → **Explore My Career DNA** → **Explore My PM Career**.
 2. Upload a PDF/DOCX/TXT CV or use one editable text/voice composer. Uploads show filename/checkmark, removal and replacement, without a full CV preview. Legacy binary DOC and scanned PDFs require conversion/OCR.
 3. **Generate** one English map. Evidence-backed role highlights lead to a maximum of four differentiated capabilities. Actual prior engineering/consulting roles remain truthful.
-4. Return to the same composer → **Update My DNA Map**. Targeted changes preserve unrelated facts, IDs and visual configuration. Version selection and Undo restore earlier results; refining an older version creates a new branch revision.
+4. Return to the same composer → **Refine My DNA**. Targeted changes preserve unrelated facts, IDs and visual configuration. Version selection and Undo restore earlier results; refining an older version creates a new branch revision.
 5. Download one rounded-font landscape PNG. Maps, sources and up to30 versions remain only in browser/session and short-lived request memory, not a personal-data database. Refresh clears the browser history.
 
 ## Run
@@ -18,15 +18,18 @@ python build_preview.py
 python ai_server.py
 ```
 
-Set API credentials through server environment settings. The server binds to `0.0.0.0:$PORT` (default10000). `OPENAI_CAREER_MODEL` takes precedence over legacy `OPENAI_MODEL`; fallback is `gpt-5-mini`. Never infer the deployed model from a default: `/health` reports the effective non-secret selection. The renderer uses local assets and SVG; there is no per-map image-model request.
+Set API credentials through server environment settings. The server binds to `0.0.0.0:$PORT` (default10000). `OPENAI_CAREER_MODEL` takes precedence over legacy `OPENAI_MODEL`; fallback is `gpt-5-mini`. Never infer the deployed model from a default: `/health` reports the effective non-secret selection. `OPENAI_SUMMARY_MODEL` and `OPENAI_REFINEMENT_MODEL` configure the subsequent stages independently, falling back to the dedicated career selection only when unset. `OPENAI_TRANSCRIPTION_MODEL` selects multilingual speech transcription. Production V2 uses `gpt-6-astra` for all three text stages. The renderer uses local assets and SVG; there is no per-map image-model request.
 
 The existing Render services and private counter database are retained. No new hosting resources are required. The source is a public Git URL and uses explicit deploys after tested pushes. Do not apply historical Blueprints automatically or overwrite the existing key/model/quota/database variables. See [Render notes](docs/RENDER.md).
 
 ## Components
 
 - `career_ai.py`: bounded schema, PM/transition interpretation, moderation, literal provenance and allowlisted refinement merge.
+- `career_pipeline.py`: separately configured, evidence-checked fact extraction and capability summarisation.
+- `semantic_refinement.py`: semantic stable-ID patches and automatic detail-proof association.
+- `voice_input.py`: bounded in-memory multilingual transcription, no forced input language.
 - `model_config.py`: separate career-model selection, token/latency observations and authenticated access diagnostics.
-- `request_state.py`: five-minute request-memory replay, conflict/concurrent-request protection and timed content eviction.
+- `request_state.py`: ten-minute request-memory replay, conflict/concurrent-request protection and timed content eviction.
 - `generation_counts.py`: v2 production aggregates and expiring anonymous random-request receipts. Historical counts are preserved as unverified legacy totals.
 - `preview/studio.js`: unified composer, browser file parsing/speech controls, session documents/version branches, retries and one detached export canvas.
 - `preview/poster.js`, `pm-fonts.js`, `pm-library.js`: reference-style SVG, local rounded typography, exact glyph-outline PNG export, six themes and24 avatars/icons.
@@ -49,7 +52,7 @@ The existing free Postgres expiry still applies. No paid plan was introduced. Ap
 python -m unittest test_ai tests.test_e2e tests.test_counts tests.test_session_architecture -v
 ```
 
-The74 automated tests use the real HTTP boundary with only model transport mocked. They cover truthful prior-role labels, provenance, unified input, PDF/DOCX parsing, speech pause/resume/fallback, targeted updates and unrelated-field preservation, restoration/branch revisions, failure/retry state, count eligibility and idempotency, model configuration, typography, real foreground bounds, layouts and one PNG.
+The automated tests use the real HTTP boundary with only model transport mocked. They cover truthful prior-role labels, provenance, unified input, PDF/DOCX parsing, speech pause/resume/fallback, targeted updates and unrelated-field preservation, restoration/branch revisions, failure/retry state, count eligibility and idempotency, model configuration, typography, real foreground bounds, layouts and one PNG.
 
 For opt-in real-project benchmarks, use `tools/benchmark_pm_models.py` with the deployment's test-token file (never an OpenAI key). It checks active-project model access, five synthetic PM profiles, role truthfulness, English/schema/evidence, latency, token-based cost estimates and test exclusion. Production observations and remaining limitations are recorded in DEPLOYED.md, not inferred from mock tests.
 

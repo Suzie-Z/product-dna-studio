@@ -4,8 +4,9 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from career_ai import AppError,process_generate,process_refine,process_review
 from generation_counts import snapshot as generation_stats,verify_storage_rollback
-from model_config import configuration,diagnostics,available_models,MODEL_OVERRIDE,USAGE
+from model_config import configuration,diagnostics,available_models,MODEL_OVERRIDE,USAGE,INTERNAL_TEST
 import request_state
+import voice_input
 ROOT=Path(__file__).parent/'preview'
 ALLOWED_ORIGINS={'https://product-dna-studio-preview.onrender.com'}|set(filter(None,os.environ.get('ALLOWED_ORIGINS','').split(',')))
 REQUEST_LOCK=threading.Lock();RECENT={};ACTIVE=threading.BoundedSemaphore(2)
@@ -33,7 +34,7 @@ class Handler(BaseHTTPRequestHandler):
   self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
  def do_OPTIONS(self):
   if not self.origin_allowed():return self.reply(403,{'error':'Origin not allowed.'})
-  self.send_response(204);self.send_header('Access-Control-Allow-Origin',self.headers.get('Origin',''));self.send_header('Vary','Origin');self.send_header('Access-Control-Allow-Methods','POST, GET, OPTIONS');self.send_header('Access-Control-Allow-Headers','Content-Type');self.send_header('Access-Control-Max-Age','600');self.end_headers()
+  self.send_response(204);self.send_header('Access-Control-Allow-Origin',self.headers.get('Origin',''));self.send_header('Vary','Origin');self.send_header('Access-Control-Allow-Methods','POST, GET, OPTIONS');self.send_header('Access-Control-Allow-Headers','Content-Type, X-Request-ID');self.send_header('Access-Control-Max-Age','600');self.end_headers()
  def do_GET(self):
   path=self.path.split('?')[0]
   if path=='/api/stats':
@@ -44,9 +45,24 @@ class Handler(BaseHTTPRequestHandler):
   if path not in paths:return self.reply(404,{'error':'Not found.'})
   name,typ=paths[path];return self.reply(200,(ROOT/name).read_bytes(),typ)
  def do_POST(self):
-  internal=False;acquired=False;cache_key=None;cache_finished=False;model_token=None;usage_token=None
+  internal=False;acquired=False;cache_key=None;cache_finished=False;model_token=None;usage_token=None;internal_token=None
   try:
    if not self.origin_allowed():raise AppError(403,'Origin not allowed.','origin_rejected')
+   internal_key=os.environ.get('PM_INTERNAL_TEST_TOKEN','');internal=bool(internal_key and hmac.compare_digest(self.headers.get('X-PM-Internal-Test',''),internal_key));internal_token=INTERNAL_TEST.set(internal)
+   if self.path=='/api/internal/audio-fixture':
+    if not internal:raise AppError(403,'This diagnostic is restricted.','forbidden')
+    return self.reply(200,voice_input.synthetic_fixture(),'audio/mpeg')
+   if self.path=='/api/transcribe':
+    rate_limit(self.client_address[0]);length=int(self.headers.get('Content-Length','0'))
+    if not 16<=length<=voice_input.MAX_AUDIO:raise AppError(413,'Record a shorter segment under 8 MB.','audio_too_large')
+    mime=self.headers.get('Content-Type','');self.connection.settimeout(20);audio=self.rfile.read(length);voice_input.validate_audio(audio,mime);acquired=ACTIVE.acquire(blocking=False)
+    if not acquired:raise AppError(429,'Voice processing is busy. Retry shortly.','busy')
+    rid=self.headers.get('X-Request-ID')or'req_'+secrets.token_hex(16);state,cached=request_state.begin(rid,{'audio_hash':hashlib.sha256(audio).hexdigest(),'mime':mime,'_endpoint':self.path,'_internal':internal});cache_key=rid
+    if state=='replay':cache_finished=True;return self.reply(200,cached)
+    if state in ['pending','conflict']:cache_key=None;raise AppError(409,'The recording request is already processing or changed. Retry shortly.','voice_request_conflict')
+    usage_token=USAGE.set([]);result=voice_input.transcribe(audio,mime)
+    if internal:result['usage_metrics']=USAGE.get()
+    request_state.finish(rid,result);cache_finished=True;return self.reply(200,result)
    handlers={'/api/internal/models':lambda b:diagnostics(),'/api/internal/counter-check':lambda b:verify_storage_rollback(),'/api/career-dna/generate':process_generate,'/api/career-dna/refine':process_refine,'/api/career-dna/review':process_review}
    if self.path not in handlers:raise AppError(404,'Not found.','not_found')
    if not self.headers.get('Content-Type','').startswith('application/json'):raise AppError(415,'Use a JSON request.','content_type')
@@ -80,7 +96,7 @@ class Handler(BaseHTTPRequestHandler):
    started=time.monotonic();result=handlers[self.path](body)
    result['map_version']=next_version
    result['base_version']=base_version if self.path.endswith('/refine')else None
-   result['model']=configuration()['career_model'];result['elapsed_seconds']=round(time.monotonic()-started,2)
+   result['model']=configuration()['stages']['refinement'if self.path.endswith('/refine')else'career_interpretation'];result['elapsed_seconds']=round(time.monotonic()-started,2)
    if internal:result['usage_metrics']=USAGE.get()
    if self.path=='/api/career-dna/generate'and result.get('map',{}).get('status')=='ready':
     eligible=os.environ.get('PUBLIC_COUNTER_ENV','')=='production'and not internal
@@ -101,5 +117,6 @@ class Handler(BaseHTTPRequestHandler):
    if cache_key and not cache_finished:request_state.discard(cache_key)
    if model_token is not None:MODEL_OVERRIDE.reset(model_token)
    if usage_token is not None:USAGE.reset(usage_token)
+   if internal_token is not None:INTERNAL_TEST.reset(internal_token)
    if acquired:ACTIVE.release()
 if __name__=='__main__':ThreadingHTTPServer(('0.0.0.0',int(os.environ.get('PORT','10000'))),Handler).serve_forever()

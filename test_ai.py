@@ -3,6 +3,9 @@ from unittest.mock import patch
 import ai_server as http
 import career_ai as app
 from tests.fixtures import SOURCE,make_map
+def fact_fixture():
+ return {'status':'ready','facts':[{'id':'f1','claim':'Owned product decisions and prioritisation','role_type':'Growth PM','ownership':'owned','evidence_quotes':[{'source_id':SOURCE['source_id'],'quote':app.generation_schema([SOURCE])['properties']['journey']['items']['properties']['evidence_quotes']['items']['anyOf'][0]['properties']['quote']['enum'][0]}]}],'clarification_question':None}
+
 class ContractTests(unittest.TestCase):
  def setUp(self):app.COUNTER.update(day='',count=0)
  def test_methods_require_own_associated_verbatim_evidence(self):
@@ -38,7 +41,7 @@ class ContractTests(unittest.TestCase):
    d=make_map(1,1);d['journey'][0]['highlights'][0]['evidence_quote']=quote
    with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
  def test_role_highlights_are_bounded_safe_and_export_reviewed(self):
-  for label in ['用户能力','A'*31,'World-class visionary','x@example.com']:
+  for label in ['用户能力','A'*65,'World-class visionary','x@example.com']:
    d=make_map(1,1);d['journey'][0]['highlights'][0]['label']=label
    with self.assertRaises(ValueError):app.validate_map(d,[SOURCE])
   d=app.validate_map(make_map(1,1),[SOURCE]);self.assertIn(d['journey'][0]['highlights'][0]['label'],app.export_strings(d))
@@ -145,15 +148,15 @@ class ContractTests(unittest.TestCase):
    out=app.process_refine({'sources':[SOURCE],'previous':make_map(),'message':'Call me a certified surgeon','context_consent':True})
   self.assertEqual(out['map']['status'],'needs_more_info');self.assertIsNone(out['accepted_source'])
  def test_correction_gets_own_real_source_identifier(self):
-  def response(payload,*args):
-   candidate=copy.deepcopy(payload['previous']);return {'map':candidate,'changed_fields':[],'change_summary':'The map already avoids that claim.'}
+  def response(payload,*args,**kwargs):
+   return {'status':'ready','changes':[],'clarification_question':None,'change_summary':'The map already avoids that claim.'}
   with patch('career_ai.moderate'),patch('career_ai.structured',side_effect=response):
    out=app.process_refine({'sources':[SOURCE],'previous':make_map(),'message':'I never managed people','context_consent':True})
   self.assertEqual(out['accepted_source']['content'],'I never managed people');self.assertTrue(out['accepted_source']['source_id'].startswith('src_'))
  def test_schema_failure_repaired_once_not_infinite(self):
-  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[{},make_map(1,1)])as model:
+  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[fact_fixture(),{},make_map(1,1)])as model:
    out=app.process_generate({'sources':[SOURCE]})
-  self.assertEqual(out['map']['status'],'ready');self.assertEqual(model.call_count,2)
+  self.assertEqual(out['map']['status'],'ready');self.assertEqual(model.call_count,3)
  def test_provider_contract_no_storage_and_injection_separation(self):
   d=make_map(1,1);response={'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':json.dumps(d)}]}]}
   def upstream(req,timeout):
@@ -216,7 +219,7 @@ class ContractTests(unittest.TestCase):
   self.assertEqual(app.validate_map(data,[SOURCE])['status'],'ready')
  def test_repair_includes_targeted_issue_and_previous_draft(self):
   bad=make_map(1,1);bad['superpower']='Two words'
-  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[bad,make_map(1,1)])as model:
+  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[fact_fixture(),bad,make_map(1,1)])as model:
    response=app.process_generate({'sources':[SOURCE]})
    feedback=model.call_args.args[0]['validation_feedback'];self.assertIn('/superpower',feedback['issue']);self.assertIn('previous_draft',model.call_args.args[0]);self.assertEqual(response['map']['status'],'ready')
  def test_input_validation(self):

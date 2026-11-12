@@ -1,6 +1,6 @@
-"""Five-minute request-memory replay; no CV/map persistence or body logging."""
+"""Ten-minute request-memory replay; no CV/map persistence or body logging."""
 import copy,hashlib,json,re,threading,time
-LOCK=threading.Lock();CACHE={};TTL=300
+LOCK=threading.Lock();CACHE={};TTL=600
 
 def begin(key,body):
  if not isinstance(key,str)or not re.fullmatch(r'[A-Za-z0-9_-]{16,80}',key):raise ValueError('invalid request identifier')
