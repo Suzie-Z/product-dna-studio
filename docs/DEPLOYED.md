@@ -1,3 +1,9 @@
+# Career-fact validation patch — published12 November2026
+
+Backend `db6dcf78f0aa7a6b557b0f68b2d06c6d9e9918b3` is live.96 automated tests and two real Astra generations passed. [Cause, fixes and verification](FACT_VALIDATION_FIX.md). Frontend, model selections and quota are unchanged.
+
+---
+
 # Refinement reliability patch — published12 November2026
 
 [Live application](https://product-dna-studio-preview.onrender.com) · [verified changes and token costs](REFINEMENT_RELIABILITY_FIX.md). Runtime `0f5d51a72d30da9df0b05161abb175fb4513e8a4` is live on both services. Copied-text edits use field-scoped context; overlong copy is shortened before display. Real API and browser Refine → Version2 → PNG verification passed.
