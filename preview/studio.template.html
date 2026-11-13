@@ -1,10 +1,278 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#ffffff"><meta name="description" content="Discover the product-management experiences that shape your PM Career DNA."><title>{{brand}}</title><meta property="og:title" content="{{brand}}"><meta property="og:description" content="Discover the PM roles and capabilities shaped by your product experience."><link rel="stylesheet" href="/studio.css"></head><body>
-<header class="site-header"><a class="wordmark" href="#home" aria-label="{{brand}} home"><img class="brand-symbol" width="44" height="44" alt=""><span>{{brand}}</span></a></header>
-<main><section class="hero" id="home"><div class="hero-orb orb-one" aria-hidden="true"></div><div class="hero-orb orb-two" aria-hidden="true"></div><span class="eyebrow">{{eyebrow}}</span><h1>{{heroLead}}<br><em>{{heroEmphasis}}</em></h1><p class="hero-description">{{heroSubtitle}}</p><button class="primary hero-button" id="begin">{{explore}} <span aria-hidden="true">→</span></button></section>
-<div class="studio hidden" id="studio">
-<section class="step-section" id="step-one" tabindex="-1" aria-labelledby="journey-heading"><div class="step-heading career-input-heading"><h2 id="journey-heading">{{explore}}</h2></div>
-<div class="cv-upload"><button id="upload" class="tool-button cv-upload-button" type="button">↑ {{upload}}</button><p class="helper">{{privacyFallback}} <a href="#privacy" id="privacy-link">{{privacyLink}}</a></p><span class="file-hint">PDF · DOCX · TXT / 5 MB</span><input id="file" type="file" accept=".pdf,.docx,.txt" hidden><div id="cv-panel" class="source-panel hidden"><div class="source-top"><span id="cv-status" role="status"></span><div><button class="text-button" id="replace-cv" type="button">Replace</button><button class="text-button" id="clear-cv" type="button">Remove</button></div></div></div></div>
-<div class="composer unified-composer"><label class="workspace-label" id="composer-label" for="story">{{contextLabel}} <span class="optional">{{optional}}</span></label><p id="composer-helper" class="composer-helper">{{contextHelper}}</p><div id="refine-history" class="refine-history hidden" role="log" aria-label="Recent changes"></div><textarea id="story" maxlength="18000" rows="5" placeholder="{{contextPlaceholder}}"></textarea><div class="composer-tools"><div class="input-actions"><button id="voice" class="tool-button microphone" type="button" aria-label="Start voice recording" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-4 0h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button id="pause-voice" class="text-button hidden" type="button">Pause</button><button id="voice-retry" class="text-button hidden" type="button">Retry recording</button><button id="voice-discard" class="text-button hidden" type="button">Discard recording</button><button id="stop-voice" class="text-button hidden" type="button">Stop</button><span id="voice-status" class="helper" role="status"></span></div></div><div id="clarification" class="clarification-panel hidden"><p id="clarification-question"></p></div><div class="composer-footer"><button class="primary" id="generate" disabled>Generate</button></div></div><div id="input-status" class="inline-status" role="status" aria-live="polite"></div></section>
-<section class="step-section hidden" id="step-two"><div id="generation-error" class="error-box hidden" role="alert"></div><button id="retry" class="text-button hidden" type="button">{{retry}}</button><div class="loading-panel hidden" id="loading" role="status" aria-live="polite"><div class="dna-loader" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><h3 id="loading-title">{{reading}}</h3><p id="loading-label">{{readingDetail}}</p><p id="loading-estimate" class="helper">{{readingEstimate}}</p><p id="loading-elapsed" class="helper sr-only"></p><button id="cancel" class="text-button" type="button">{{cancel}}</button></div>
-<div id="result-panel" class="hidden"><div class="result-heading"><h3>My PM Career DNA</h3><div class="version-tools"><label class="sr-only" for="version-select">Map version</label><select id="version-select" aria-label="Map version"></select><button id="undo" class="text-button" type="button" disabled>{{undo}}</button></div><p id="generation-number" class="generation-number hidden" role="status"></p></div><div id="map-visual" class="career-map" aria-label="Your PM Career DNA map"></div><details id="full-journey" class="full-journey"><summary>View supporting evidence</summary><div id="journey-evidence"></div></details><div class="result-actions"><button class="primary" id="save">Download DNA Map <span aria-hidden="true">↓</span></button><button id="edit-map" class="text-button" type="button">{{refineHeading}} ↑</button></div><div id="save-status" class="inline-status" role="status"></div></div></section>
-</div></main><footer><span>{{brand}}</span><div class="footer-meta"><p id="usage-count" class="usage-count" role="status">{{counterLoading}}</p><p id="counter-note" class="helper"></p><a id="feedback-link" class="hidden" rel="noopener noreferrer" target="_blank">{{feedback}}</a><details id="privacy" class="privacy-summary"><summary>Privacy &amp; data</summary><p>CV files are read in your browser. Extracted text and your instructions are sent to our API and OpenAI to create and refine your DNA. Server results remain in memory for up to 10 minutes for retries. Refresh clears your browser session. We do not write CVs or maps to the app database. OpenAI and optional browser speech services apply their own processing and retention policies.</p><p>We keep aggregate creation counts and anonymous request receipts to prevent duplicate counts. Receipts expire after 48 hours and are removed on the next counter access. We do not store CVs or maps in the counter database. Short-lived request limits use a hashed network address in memory.</p></details><a href="https://developers.openai.com/api/docs/guides/your-data" target="_blank" rel="noopener noreferrer">AI processing &amp; data policies</a></div></footer>{{COPY_SCRIPT}}{{VISUAL_SCRIPT}}<script src="/pm-library.js"></script><script src="/pm-fonts.js"></script><script src="/poster.js"></script><script src="/studio.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Discover the strengths behind your story. An evidence-grounded reflection on your professional journey."
+    />
+    <title>Career DNA · The strengths behind your story</title>
+    <link rel="stylesheet" href="/studio.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#discover" aria-label="Career DNA home"
+        ><svg viewBox="0 0 36 44" aria-hidden="true">
+          <path
+            d="M9 3C40 15-4 29 27 41M27 3C-4 15 40 29 9 41"
+            fill="none"
+            stroke="#9a7bc7"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M13 9h10M11 18h14M11 26h14M13 35h10"
+            stroke="#71bdb9"
+            stroke-width="3"
+            stroke-linecap="round"
+          /></svg
+        ><span
+          >Career DNA<span class="brand-sub"
+            >A little perspective. A lot of you.</span
+          ></span
+        ></a
+      ><button class="text-button" id="privacy-open">Your privacy</button>
+    </header>
+    <nav aria-label="Your progress" class="progress">
+      <button data-screen="discover" aria-current="step">
+        <span>01</span> Your story</button
+      ><span class="progress-line"></span
+      ><button data-screen="journey" disabled>
+        <span>02</span> Your journey</button
+      ><span class="progress-line"></span
+      ><button data-screen="dna" disabled><span>03</span> Your DNA</button>
+    </nav>
+    <main>
+      <section
+        id="discover"
+        class="screen discover"
+        aria-labelledby="discover-title"
+      >
+        <div class="hero-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <p class="eyebrow">Every chapter counts</p>
+        <h1 id="discover-title">Discover Your<br /><em>Career DNA</em></h1>
+        <p class="hero-copy">
+          Your journey has shaped who you are today.<br />Discover the strengths
+          behind your story.
+        </p>
+        <div id="upload-panel" class="upload-panel">
+          <div class="drop-zone" id="drop-zone">
+            <input
+              id="cv-file"
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              class="visually-hidden"
+            /><span class="upload-symbol" aria-hidden="true">↑</span
+            ><label class="button" for="cv-file" tabindex="0" id="upload-label"
+              >Upload Your CV <span aria-hidden="true">↗</span></label
+            >
+            <p>or drop it here</p>
+            <small>PDF or DOCX · up to 5 MB</small>
+          </div>
+          <p class="privacy-short">
+            Your CV stays out of our database.<br />Only your text is sent for
+            AI analysis.
+            <button class="inline-button" id="privacy-inline">
+              How it works
+            </button>
+          </p>
+        </div>
+        <div
+          id="loading"
+          class="loading panel"
+          hidden
+          role="status"
+          aria-live="polite"
+        >
+          <div class="loading-world" aria-hidden="true">
+            <i></i><i></i><i></i>
+          </div>
+          <h2 id="loading-title">Finding the chapters in your story…</h2>
+          <p id="loading-copy">
+            We’re reading your experience, not judging it.
+          </p>
+          <p class="muted" id="loading-time">This can take a minute or two.</p>
+          <button class="text-button" id="cancel">Cancel</button>
+        </div>
+        <div id="review-panel" class="panel review" hidden>
+          <div class="section-intro">
+            <p class="eyebrow">A quick look</p>
+            <h2>Does this look like your journey?</h2>
+            <p>
+              Fix any company, role or date we missed. Leave unknown dates
+              blank.
+            </p>
+          </div>
+          <p id="review-note" class="muted"></p>
+          <div id="review-list"></div>
+          <p class="review-helper">
+            The order below becomes your journey order. Overlapping roles and
+            career breaks are welcome.
+          </p>
+          <button class="button" id="analyse">
+            Reveal the strengths behind my story
+            <span aria-hidden="true">→</span></button
+          ><button class="text-button" id="replace">
+            Choose a different CV
+          </button>
+        </div>
+        <div id="error-panel" class="error-panel" hidden role="alert">
+          <p id="error-message"></p>
+          <button class="text-button" id="retry">Try again</button>
+        </div>
+        <p class="quiet-note" id="file-label" aria-live="polite"></p>
+      </section>
+      <section
+        id="journey"
+        class="screen"
+        hidden
+        aria-labelledby="journey-title"
+      >
+        <div class="section-intro centered">
+          <p class="eyebrow">Different chapters. Connected strengths.</p>
+          <h1 id="journey-title" tabindex="-1">Your Career Journey</h1>
+          <p>Each chapter added something only you could bring.</p>
+        </div>
+        <p class="journey-order" id="journey-order"></p>
+        <div id="island-world" class="island-world"></div>
+        <div class="screen-action">
+          <button class="button" id="reveal">
+            Discover My Career DNA <span aria-hidden="true">→</span></button
+          ><button class="text-button" id="back-review">
+            Back to my review
+          </button>
+        </div>
+      </section>
+      <section id="dna" class="screen" hidden aria-labelledby="dna-title">
+        <div class="section-intro centered">
+          <p class="eyebrow">The strengths behind your story</p>
+          <h1 id="dna-title" tabindex="-1">My Career DNA</h1>
+        </div>
+        <div class="identity-card">
+          <svg class="dna-symbol" viewBox="0 0 90 130" aria-hidden="true">
+            <path
+              d="M19 8C126 48-36 82 71 122M71 8C-36 48 126 82 19 122"
+              stroke="#a38bc9"
+              stroke-width="8"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <path
+              d="M31 21h28M23 45h44M23 83h44M31 109h28"
+              stroke="#8dc8c0"
+              stroke-width="6"
+              stroke-linecap="round"
+            />
+          </svg>
+          <p class="identity-label">A thread that runs through your work</p>
+          <h2 id="identity"></h2>
+          <button class="evidence-button" id="identity-evidence">
+            See the evidence
+          </button>
+        </div>
+        <div class="dna-section-heading">
+          <h2>My Core Career DNA</h2>
+          <p>What your experiences have helped you build.</p>
+        </div>
+        <div id="strengths" class="strength-grid"></div>
+        <div class="reflection-grid">
+          <article class="reflection">
+            <span class="reflection-number" aria-hidden="true">↝</span>
+            <h2>The Story Behind My Strengths</h2>
+            <p id="evolution"></p>
+            <button class="evidence-button" id="evolution-evidence">
+              See the connections
+            </button>
+          </article>
+          <article class="reflection recognition">
+            <span class="reflection-number" aria-hidden="true">✧</span>
+            <h2>A Moment of Recognition</h2>
+            <p id="recognition"></p>
+            <button class="evidence-button" id="recognition-evidence">
+              See the evidence
+            </button>
+          </article>
+        </div>
+        <div class="screen-action">
+          <p class="closing">Your story holds more than a list of roles.</p>
+          <button class="text-button" id="back-journey">
+            ← Revisit my journey</button
+          ><button class="text-button" id="start-over">
+            Start a new story
+          </button>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <span>Career DNA</span>
+      <p>A reflection on your experience. Never a score or a prediction.</p>
+    </footer>
+    <dialog id="privacy-dialog" aria-labelledby="privacy-title">
+      <button
+        class="dialog-close text-button"
+        data-close
+        aria-label="Close privacy details"
+      >
+        ×
+      </button>
+      <p class="eyebrow">Your story, handled with care</p>
+      <h2 id="privacy-title">A little clarity on privacy</h2>
+      <p>
+        Your PDF or DOCX is uploaded to our server and read in an isolated
+        process. The original file is discarded after reading; it is not saved
+        to disk or a database.
+      </p>
+      <p>
+        Extracted text, career facts and your corrections are sent to OpenAI for
+        analysis. Common contact details are removed first, but automatic
+        removal is not exhaustive. OpenAI and hosting providers apply their own
+        processing and retention policies.
+      </p>
+      <p>
+        Your review and results are held in temporary server memory for up to
+        ten minutes. The browser holds the selected file and results in memory
+        until you replace them, restart or leave. There is no account, document
+        library or public publishing.
+      </p>
+      <p>
+        If production counting is enabled, only anonymous creation totals and
+        expiring random request receipts are stored, never CVs or results.
+        Hosting may retain operational metadata such as network addresses.
+      </p>
+      <p>
+        <a
+          href="https://openai.com/policies/how-your-data-is-used-to-improve-model-performance/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >OpenAI data policies ↗</a
+        >
+      </p>
+      <button class="button" data-close>Got it</button>
+    </dialog>
+    <dialog id="evidence-dialog" aria-labelledby="evidence-title">
+      <button
+        class="dialog-close text-button"
+        data-close
+        aria-label="Close evidence"
+      >
+        ×
+      </button>
+      <p class="eyebrow">Grounded in your experience</p>
+      <h2 id="evidence-title">The story behind this insight</h2>
+      <div id="evidence-content"></div>
+      <p class="muted">
+        Evidence links show where an interpretation comes from. They are not
+        independent verification of your career.
+      </p>
+    </dialog>
+    <script src="/visual-design.js"></script>
+    <script src="/islands.js"></script>
+    <script src="/journey.js"></script>
+    <script src="/dna.js"></script>
+    <script src="/cv-upload.js"></script>
+    <script src="/studio.js"></script>
+  </body>
+</html>

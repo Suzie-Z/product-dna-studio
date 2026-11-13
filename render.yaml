@@ -1,16 +1,21 @@
-# Standalone, stateless Career DNA Studio. No database or persistent disk.
+# REVIEW ONLY. Dedicated rebuild branch; production deployment requires approval.
+# Existing service identity is retained; serve the V2 frontend and API together.
 services:
   - type: web
-    name: career-dna-studio
+    name: product-dna-studio-ai
     runtime: python
+    branch: career-dna-v2-rebuild
+    autoDeploy: false
     plan: free
-    buildCommand: python build_preview.py && python -m compileall -q ai_server.py career_ai.py
+    buildCommand: pip install -r requirements.txt && python build_preview.py && python -m compileall -q ai_server.py career_intelligence.py document_parser.py
     startCommand: python ai_server.py
     healthCheckPath: /health
     envVars:
       - key: OPENAI_API_KEY
         sync: false
-      - key: OPENAI_MODEL
-        value: gpt-5-mini
+      - key: OPENAI_CAREER_MODEL
+        sync: false
+      - key: OPENAI_SUMMARY_MODEL
+        sync: false
       - key: DAILY_GENERATION_LIMIT
         value: "10"

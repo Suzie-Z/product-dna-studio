@@ -1,3 +1,9 @@
+# Career DNA V2 rebuild — not deployed
+
+The `career-dna-v2-rebuild` branch is a separate implementation preview. The existing production website remains unchanged. [V2 delivery and QA](v2/DELIVERY.md). The releases below describe the live V1 history, not a V2 deployment.
+
+---
+
 # PM Career Studio handoff — published 12 November 2026
 
 Runtime `717d3961f6246c5fc3332defe86763fde1f9ba18` is live on both services. **108 tests passed**, plus live provider/browser refinement, Undo and single-PNG export checks. [Delivery report and remaining limits](PM_STUDIO_HANDOFF_DELIVERY.md).

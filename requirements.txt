@@ -1,2 +1,4 @@
-# Only used when COUNTER_DATABASE_URL enables persistent anonymous counts.
+# Isolated PDF parser; DOCX uses bounded ZIP/XML from the standard library.
+pypdf==6.10.0
+# Only required when COUNTER_DATABASE_URL enables anonymous persistent counts.
 psycopg[binary]==3.3.8
