@@ -2,7 +2,7 @@ import copy,io,json,os,threading,unittest,urllib.request,urllib.error
 from unittest.mock import patch
 import ai_server as http
 import career_ai as app
-from tests.fixtures import SOURCE,make_map
+from tests.fixtures import SOURCE,make_map,make_generation
 def fact_fixture():
  return {'status':'ready','facts':[{'id':'f1','claim':'Owned product decisions and prioritisation','role_type':'Growth PM','ownership':'owned','evidence_quotes':[{'source_id':SOURCE['source_id'],'quote':app.generation_schema([SOURCE])['properties']['journey']['items']['properties']['evidence_quotes']['items']['anyOf'][0]['properties']['quote']['enum'][0]}]}],'clarification_question':None}
 
@@ -154,7 +154,7 @@ class ContractTests(unittest.TestCase):
    out=app.process_refine({'sources':[SOURCE],'previous':make_map(),'message':'I never managed people','context_consent':True})
   self.assertEqual(out['accepted_source']['content'],'I never managed people');self.assertTrue(out['accepted_source']['source_id'].startswith('src_'))
  def test_schema_failure_repaired_once_not_infinite(self):
-  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[fact_fixture(),{},make_map(1,1)])as model:
+  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[fact_fixture(),{},make_generation(1,1)])as model:
    out=app.process_generate({'sources':[SOURCE]})
   self.assertEqual(out['map']['status'],'ready');self.assertEqual(model.call_count,3)
  def test_provider_contract_no_storage_and_injection_separation(self):
@@ -218,8 +218,8 @@ class ContractTests(unittest.TestCase):
   data=make_map(1,1);data['superpower']='Building reliable systems'
   self.assertEqual(app.validate_map(data,[SOURCE])['status'],'ready')
  def test_repair_includes_targeted_issue_and_previous_draft(self):
-  bad=make_map(1,1);bad['superpower']='Two words'
-  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[fact_fixture(),bad,make_map(1,1)])as model:
+  bad=make_generation(1,1);bad['superpower']='Two words'
+  with patch.dict(os.environ,{'OPENAI_API_KEY':'test-key-not-real'}),patch('career_ai.moderate'),patch('career_ai.structured',side_effect=[fact_fixture(),bad,make_generation(1,1)])as model:
    response=app.process_generate({'sources':[SOURCE]})
    feedback=model.call_args.args[0]['validation_feedback'];self.assertIn('/superpower',feedback['issue']);self.assertIn('previous_draft',model.call_args.args[0]);self.assertEqual(response['map']['status'],'ready')
  def test_input_validation(self):

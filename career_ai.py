@@ -361,12 +361,12 @@ def process_refine(body):
  try:previous=validate_map(body.get('previous'),sources,allow_pending=True)
  except (ValueError,TypeError,AttributeError,KeyError):raise AppError(400,'Your previous map needs to be regenerated.','invalid_previous')
  if previous['status']!='ready':raise AppError(400,'Generate your first map before refining it.','no_previous')
- presentation=visual_preference(message)
- if presentation:return {'map':previous,'changed_fields':[],'change_summary':'A new palette, with your story intact.'if 'theme_id'in presentation else'A new companion for your story.','accepted_source':None,'presentation_patch':presentation,'visual_only':True}
+ if visual_preference(message)or re.search(r'\b(?:colou?rs?|palette|background|island shape|move.*icons?|change.*icons?|islands?|icons?|layout|mascot|avatar|warmer (?:colou?rs?|palette)|soften.*colou?r)\b|背景|配色|图标|岛屿|布局|换小人',message,re.I):
+  return {'map':clarification('Would you like to use Generate a New Map for a different presentation, or change only the wording here?'),'change_summary':'Refine changes words and evidence only. Your current map and visual identity are unchanged.','accepted_source':None}
  if CREDENTIAL.search(message)and REQUEST_CLAIM.search(message)and not re.search(r'\b(?:remove|delete|omit|correct)\b|删除|去掉|纠正',message,re.I)and not has_credential_evidence(sources):
   return {'map':clarification('What qualification and relevant experience support that credential?'),'change_summary':'That credential needs supporting evidence. Your existing map is unchanged.','accepted_source':None}
  from semantic_refinement import refine
- return refine(previous,sources,message,body.get('clarification_context',''),body.get('career_intelligence'),body.get('map_version'),body.get('fit_fields'),body.get('visual'),body.get('edit_history'),body.get('original_visual'))
+ return refine(previous,sources,message,body.get('clarification_context',''),body.get('career_intelligence'),body.get('map_version'),body.get('fit_fields'),body.get('visual'),body.get('edit_history'),body.get('original_visual'),body.get('reflections'))
 
 def process_review(body):
  if body.get('context_consent')is not True:raise AppError(400,'Allow source context to be resent for the edited export review.','consent_required')

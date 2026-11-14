@@ -2,7 +2,7 @@
 import copy,unittest
 from unittest.mock import patch
 import career_ai as a,career_pipeline as pipeline
-from tests.fixtures import SOURCE,make_map
+from tests.fixtures import SOURCE,make_map,make_generation
 
 def fact(claim='Owned a product roadmap'):
  return {'status':'ready','facts':[{'id':'f1','claim':claim,'role_type':'Platform PM','ownership':'owned','evidence_quotes':[{'source_id':SOURCE['source_id'],'quote':SOURCE['content'][10:70]}]}],'clarification_question':None}
@@ -24,6 +24,6 @@ class FactValidation(unittest.TestCase):
   with self.assertRaises(ValueError):pipeline.validate(fact('我管理产品需求'),[SOURCE])
  def test_repair_receives_rejected_draft_and_targeted_field_feedback(self):
   bad=fact();bad['facts'][0]['evidence_quotes'][0]['quote']='Invented source quotation.'
-  with patch('career_ai.structured',side_effect=[bad,fact(),make_map(1,1)])as model,patch('career_ai.moderate'):
+  with patch('career_ai.structured',side_effect=[bad,fact(),make_generation(1,1)])as model,patch('career_ai.moderate'):
    self.assertEqual(pipeline.generate([SOURCE],'')['map']['status'],'ready')
   repair=model.call_args_list[1].args[0];self.assertEqual(repair['previous_draft'],bad);self.assertIn('/facts/0/evidence_quotes',repair['validation_feedback']['issue'])

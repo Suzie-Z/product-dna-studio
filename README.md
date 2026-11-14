@@ -1,3 +1,9 @@
+# Current branch: original PM Career Studio core iteration
+
+V2 is discontinued as the design baseline. This branch restores original commit `c065bdf` and incrementally improves CV-first analysis, grounded Recognition/Aspiration and on-demand content-only Refine. **Not deployed to production.** [Changes, tests, limits and local use](docs/pm-core/DELIVERY.md). The historical product description below predates this focused iteration.
+
+---
+
 # Career Studio
 
 An enhancement of the existing illustrated app: PM career intelligence, deterministic visuals and session-only conversational refinement. See [architecture and privacy](docs/CAREER_STUDIO_ARCHITECTURE.md), [visual acceptance standard](docs/PM_DNA_DELIVERY_STANDARD.md) and [observed live deployment](docs/DEPLOYED.md).

@@ -10,29 +10,9 @@ class HandoffBrowser(unittest.TestCase):
  def ready(self,width=1440):
   page,context=self.page(width);d=make_map(3,3);v={'number':1,'parent_id':None,'map':d,'sources':[SOURCE],'variant':{'theme_id':'lilac_light','avatar_id':'pm_avatar_04','pathway_id':'glow','density':'compact'},'cv':{'name':'','text':'','id':'src_cv'},'intelligence':None}
   page.evaluate('async(v)=>{versions=[v];versionSerial=1;activeVersion=v;result=v.map;renderVariant=v.variant;document.getElementById("step-two").classList.remove("hidden");await renderResult();updateButtons()}',v);return page,context,d
- def test_conversational_visual_changes_history_undo_and_original_icons(self):
-  page,context,d=self.ready();payloads=[]
-  def model(payload,*args,**kwargs):
-   payloads.append(payload);m=payload['refinement_request'].lower()
-   if 'warmer'in m:changes=[{'path':'/visual/theme_id','value':'peach_coral'}]
-   elif 'compass'in m:changes=[{'path':'/visual/icons/k3','value':'strategy'}]
-   elif 'pathway'in m:changes=[{'path':'/visual/pathway_id','value':'constellation'},{'path':'/visual/platforms/j2','value':'crystal'}]
-   elif 'original'in m:changes=[{'path':'/visual/reset_icons','value':True}]
-   else:changes=[{'path':'/visual/softness','value':'soft'}]
-   return {'status':'ready','changes':changes,'clarification_question':None,'change_summary':'Updated your chosen visual details.'}
-  with patch('career_ai.structured',side_effect=model),patch('career_ai.moderate'):
-   for number,message in enumerate(['Can we make this feel warmer while keeping my story?','Give the third card a compass icon.','Try a constellation pathway and a crystal second platform.','No, keep the icons; just soften the colors.','Please restore the original icons.'],2):
-    page.locator('#story').fill(message);page.locator('#generate').click();page.wait_for_function('(n)=>activeVersion.number===n&&!busy',arg=number);self.assertEqual(page.evaluate('result'),d)
-  self.assertEqual(page.locator('#refine-history .conversation-user').count(),3);self.assertEqual(page.evaluate('activeVersion.sources.length'),1);self.assertEqual(page.evaluate('renderVariant.icon_overrides'),{});self.assertEqual(page.evaluate('renderVariant.theme_id'),'peach_coral');self.assertEqual(page.evaluate('renderVariant.softness'),'soft');self.assertEqual(page.evaluate('renderVariant.pathway_id'),'constellation');self.assertEqual(page.locator('[data-platform="crystal"]').count(),1);self.assertEqual(payloads[-1]['edit_history'][-1]['instruction'],'No, keep the icons; just soften the colors.')
-  page.locator('#undo').click();page.wait_for_function('activeVersion.number===5&&!busy');self.assertEqual(page.evaluate('renderVariant.icon_overrides.k3'),'strategy');page.locator('#version-select').select_option('1');page.wait_for_function('activeVersion.number===1&&!busy');self.assertEqual(page.evaluate('renderVariant.theme_id'),'lilac_light');context.close()
- def test_cancelled_edit_cannot_replace_current_version(self):
-  page,context,d=self.ready();held=[];context.route('**/api/career-dna/refine',lambda route:held.append(route));page.locator('#story').fill('Please try warmer colors.');page.locator('#generate').click();page.wait_for_function('busy');page.locator('#cancel').click();page.wait_for_function('!busy');self.assertEqual(page.evaluate('versions.length'),1);self.assertEqual(page.evaluate('result'),d);self.assertIn('warmer',page.locator('#story').input_value());
-  for route in held:
-   try:route.abort()
-   except Exception:pass
-  context.close()
- def test_original_version_survives_bounded_history(self):
-  page,context,d=self.ready();page.evaluate('()=>{const first=structuredClone(activeVersion);versions=Array.from({length:30},(_,i)=>({...structuredClone(first),number:i+1,parent_id:i||null}));activeVersion=versions[29];versionSerial=30;updateButtons()}');page.locator('#story').fill('Change only the background to blue');page.locator('#generate').click();page.wait_for_function('activeVersion.number===31&&!busy');self.assertEqual(page.evaluate('versions.length'),30);self.assertEqual(page.evaluate('versions[0].number'),1);page.locator('#version-select').select_option('1');page.wait_for_function('activeVersion.number===1&&!busy');self.assertEqual(page.evaluate('result'),d);context.close()
+
+
+
  def test_desktop_viewports_export_mobile_and_zoom(self):
   page,context,d=self.ready()
   for w,h in [(1440,900),(1366,768)]:

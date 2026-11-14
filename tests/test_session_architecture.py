@@ -52,7 +52,7 @@ class Architecture(unittest.TestCase):
    before=make_map(1,1)
    with patch('career_ai.provider')as provider:
     out=career_ai.process_refine({'sources':[SOURCE],'previous':before,'message':message,'context_consent':True})
-   provider.assert_not_called();self.assertEqual(out['map'],before);self.assertEqual(out['presentation_patch'],patch_value);self.assertEqual(out['changed_fields'],[])
+   provider.assert_not_called();self.assertEqual(out['map']['status'],'needs_more_info');self.assertNotIn('presentation_patch',out)
  def test_model_priority_and_private_diagnostics(self):
   self.assertEqual(model_config.career_model(),'legacy-model')
   with patch.dict(os.environ,{'OPENAI_CAREER_MODEL':'separate-career-model','OPENAI_API_KEY':'never-print-this-secret'}):
