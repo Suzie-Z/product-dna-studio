@@ -1,3 +1,13 @@
+# Current release: Approved Career DNA design and one-step Refine
+
+Published **15 November 2026 (Sydney)**. [Open the website](https://product-dna-studio-preview.onrender.com/?v=b6fed7b). The current original app uses the approved 4:3 dynamic map, complete explorer illustration, sculptural islands and computed convergence ribbons. Refine is one input/one Apply, with atomic scoped replacements and inline errors rather than questions. Critical WOFF2 fonts load before paint; the redundant homepage CTA is removed.
+
+[Changed files, privacy, 133 passing tests, screenshots and limitations](docs/consolidated/DELIVERY.md). Production Refine remains verified `gpt-6-sol`; initial analysis remains `gpt-6-astra`. Two actual consecutive Sol refinements passed without increasing real creation/download totals. [Deployment record](docs/DEPLOYED.md).
+
+All release and feature descriptions below are historical; the consolidated requirements supersede them.
+
+---
+
 # Current release: Original Experience Refinement
 
 [Open the updated website](https://product-dna-studio-preview.onrender.com/?v=599bf51). Text-only Refine uses verified gpt-6-sol at /v1/responses; initial analysis retains gpt-6-astra. The original map now has an integrated theme, uniform platforms, connection glow and summary ribbon. [Changed files, tests, real-model verification and limits](docs/original-refinement/DELIVERY.md).

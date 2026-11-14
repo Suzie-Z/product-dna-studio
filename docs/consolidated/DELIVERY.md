@@ -31,10 +31,15 @@ Runtime: `career_ai.py`, `semantic_refinement.py`, `preview/studio.template.html
 
 ## QA and review
 
-The verified regression log is included in the review bundle. Coverage includes actual browser DOCX/PDF parsing, upload/generate, consecutive refinement, undo, replacement CV, errors/retries/cancellation, sticky modal, one PNG download and anonymous download metrics. New checks cover cold reload without visible fallback fonts, default-collapsed/right-aligned privacy, 2–5 stages × 1–4 cards, uniform silhouettes, path-to-hub anchors, safe art bounds and actual painted text overlap. Required-field and unknown-target failures preserve input and map.
+All 133 tests passed in the verified regression run (168.748 seconds). The verified log is included in the review bundle. Coverage includes actual browser DOCX/PDF parsing, upload/generate, consecutive refinement, undo, replacement CV, errors/retries/cancellation, sticky modal, one PNG download and anonymous download metrics. New checks cover cold reload without visible fallback fonts, default-collapsed/right-aligned privacy, 2–5 stages × 1–4 cards, uniform silhouettes, path-to-hub anchors, safe art bounds and actual painted text overlap. Required-field and unknown-target failures preserve input and map.
 
 Actual running-app screenshots show homepage, privacy, Refine desktop/mobile, two/three/five-stage maps, reading panels and the actual downloaded PNG. Before captures use commit `194c8bf` with the same synthetic three-role map data. The comparison gallery presents the approved image beside the actual renderer at matching displayed widths. Synthetic QA fixtures are used for deterministic visual comparison, not hardcoded into the product or presented as fresh AI synthesis.
 
 ## Remaining differences
 
 The composition is a component reconstruction, not pixel-identical generated artwork: header wave sculpting, outer props and island surface detailing are simplified SVG/atlas elements. The full-body explorer currently uses one consistent pose; the older character atlas is retained in the repository. Mobile intentionally hides this decoration. Palette and copy can vary with a real person's accepted map. Evidence validators protect provenance/structure; they do not guarantee editorial excellence for every CV. Browser download delivery cannot prove final disk save; its disclosed metric remains a handoff count.
+
+
+## Live release verification
+
+Runtime commit `b6fed7b` is live on both existing Render services. Two actual GPT-6 Sol refinements succeeded: a duplicate phrase was updated in journey and capability together (6.38 seconds), then an explicitly scoped role-only change preserved the earlier capability edit (4.67 seconds). Blank and nonexistent-target requests returned single 422 errors. Real creation totals remained 8 → 8 and download totals 0 → 0; no synthetic public generation or download was recorded. See `live-refinement-checks.json`.

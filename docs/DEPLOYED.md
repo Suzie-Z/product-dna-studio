@@ -1,3 +1,17 @@
+# Current published runtime — 15 November 2026 (Sydney)
+
+Runtime commit: `b6fed7be59718acc4ddefe56d597ff4f29cb1109`.
+
+- Frontend: https://product-dna-studio-preview.onrender.com/ — service `srv-dbpf7to8v5cc73e3jtfg`, live deploy `dep-dbsf95m7bikc73fea790`.
+- API: https://product-dna-studio-ai.onrender.com/ — service `srv-dbpflmjrjlhs73fps3kg`, live deploy `dep-dbsf8hmc6qcc7390pvv0`.
+- Configured/available Refine model `gpt-6-sol`, `https://api.openai.com/v1/responses`; two actual refinements passed (duplicate replacement, then role-specific replacement preserving the earlier edit). Blank and nonexistent-target requests returned 422.
+- All 133 regression tests passed. Actual export is one 3200×2400 PNG. Existing persistent aggregate counters retained; no CV/map storage added. Synthetic verification created no public generations/downloads (creation total 8→8, downloads 0→0 during the check).
+- [Full consolidated handoff](consolidated/DELIVERY.md).
+
+Historical deployment notes follow.
+
+---
+
 # Original Experience Refinement — published 14 November 2026
 
 Application commit 599bf51061b44b6a8db280ecdec47b6e87944d73 is live on the existing API and frontend. Refine uses gpt-6-sol. [Verification and limits](original-refinement/DELIVERY.md).
