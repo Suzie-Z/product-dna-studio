@@ -3,7 +3,7 @@ import json,os,threading,time,hashlib,hmac,secrets
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from career_ai import AppError,process_generate,process_refine,process_review
-from generation_counts import snapshot as generation_stats,verify_storage_rollback
+from generation_counts import snapshot as generation_stats,verify_storage_rollback,downloads,public_stats
 from model_config import configuration,diagnostics,available_models,MODEL_OVERRIDE,USAGE,INTERNAL_TEST
 import request_state
 
@@ -38,7 +38,7 @@ class Handler(BaseHTTPRequestHandler):
  def do_GET(self):
   path=self.path.split('?')[0]
   if path=='/api/stats':
-   try:return self.reply(200,generation_stats())
+   try:return self.reply(200,public_stats())
    except Exception:return self.reply(503,{'error':'Generation count temporarily unavailable.'})
   if path=='/api/refinement-model':
    access=available_models();selected=configuration()['stages']['refinement']
@@ -53,7 +53,7 @@ class Handler(BaseHTTPRequestHandler):
    if not self.origin_allowed():raise AppError(403,'Origin not allowed.','origin_rejected')
    internal_key=os.environ.get('PM_INTERNAL_TEST_TOKEN','');internal=bool(internal_key and hmac.compare_digest(self.headers.get('X-PM-Internal-Test',''),internal_key));internal_token=INTERNAL_TEST.set(internal)
    handlers={'/api/internal/models':lambda b:diagnostics(),'/api/internal/counter-check':lambda b:verify_storage_rollback(),'/api/career-dna/generate':process_generate,'/api/career-dna/refine':process_refine,'/api/career-dna/review':process_review}
-   if self.path not in handlers:raise AppError(404,'Not found.','not_found')
+   if self.path not in handlers and self.path!='/api/downloads':raise AppError(404,'Not found.','not_found')
    if not self.headers.get('Content-Type','').startswith('application/json'):raise AppError(415,'Use a JSON request.','content_type')
    length=int(self.headers.get('Content-Length','0'))
    if not 0<length<=240000:raise AppError(413,'Your request is too long. Shorten your experience or refinement history.','request_too_large')
@@ -64,7 +64,11 @@ class Handler(BaseHTTPRequestHandler):
    if self.path.startswith('/api/internal/'):
     if not internal:raise AppError(403,'This diagnostic is restricted.','forbidden')
     return self.reply(200,handlers[self.path](body))
-   rate_limit(self.client_address[0]);acquired=ACTIVE.acquire(blocking=False)
+   rate_limit(self.client_address[0])
+   if self.path=='/api/downloads':
+    downloads(increment=not internal,request_id=body.get('request_id'))
+    return self.reply(200,public_stats())
+   acquired=ACTIVE.acquire(blocking=False)
    if not acquired:raise AppError(429,'The studio is busy. Try again shortly.','busy')
    base_version=body.get('map_version',1)
    if type(base_version)is not int or not 1<=base_version<=1000:raise AppError(400,'The map version is invalid.','invalid_version')

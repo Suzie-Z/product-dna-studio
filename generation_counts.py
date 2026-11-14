@@ -58,3 +58,40 @@ def verify_storage_rollback():
    rid=hashlib.sha256(secrets.token_bytes(32)).hexdigest();before=_database_snapshot(conn,False,day(),None);a=_database_snapshot(conn,True,day(),rid);b=_database_snapshot(conn,True,day(),rid)
    assert a['total_generations']==before['total_generations']+1 and b['total_generations']==a['total_generations']and a['generation_number']==b['generation_number']
  return {'verified':True,'test_writes_rolled_back':True,'deduplicated':True}
+
+_DOWNLOADS=0
+_DOWNLOAD_RECEIPTS={}
+def downloads(increment=False,request_id=None):
+ """Anonymous handoff counts; independent of creations, 48h retry receipts."""
+ global _DOWNLOADS
+ import re
+ if increment and (not isinstance(request_id,str) or not re.fullmatch(r'[A-Za-z0-9_-]{16,100}',request_id)):
+  raise ValueError('A random download request ID is required')
+ receipt=hashlib.sha256(request_id.encode()).hexdigest() if request_id else None
+ url=os.environ.get('COUNTER_DATABASE_URL','').strip()
+ if not url:
+  with _LOCK:
+   now=time.monotonic()
+   for key,when in list(_DOWNLOAD_RECEIPTS.items()):
+    if when<now-48*3600:del _DOWNLOAD_RECEIPTS[key]
+   if increment and receipt not in _DOWNLOAD_RECEIPTS:
+    _DOWNLOADS+=1;_DOWNLOAD_RECEIPTS[receipt]=now
+   return _DOWNLOADS
+ import psycopg
+ with psycopg.connect(url,connect_timeout=5) as conn:
+  with conn.cursor() as cur:
+   cur.execute("SELECT pg_advisory_xact_lock(hashtext('pm_dna_download_counter'))")
+   cur.execute('CREATE TABLE IF NOT EXISTS pm_dna_download_total(singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK(singleton),count BIGINT NOT NULL DEFAULT 0 CHECK(count>=0))')
+   cur.execute('INSERT INTO pm_dna_download_total(singleton,count) VALUES(TRUE,0) ON CONFLICT DO NOTHING')
+   cur.execute('CREATE TABLE IF NOT EXISTS pm_dna_download_receipts(request_hash CHAR(64) PRIMARY KEY,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())')
+   cur.execute("DELETE FROM pm_dna_download_receipts WHERE created_at<NOW()-INTERVAL '48 hours'")
+   if increment:
+    cur.execute('INSERT INTO pm_dna_download_receipts(request_hash) VALUES(%s) ON CONFLICT DO NOTHING RETURNING request_hash',(receipt,))
+    if cur.fetchone():cur.execute('UPDATE pm_dna_download_total SET count=count+1 WHERE singleton=TRUE')
+   cur.execute('SELECT count FROM pm_dna_download_total WHERE singleton=TRUE');return int(cur.fetchone()[0])
+
+def public_stats():
+ value=snapshot()
+ try:value['total_downloads']=downloads()
+ except Exception:pass # Unavailable is omitted, never reported as a false zero.
+ return value
