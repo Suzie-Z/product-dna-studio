@@ -1,3 +1,11 @@
+# Current release: Original Experience Refinement
+
+[Open the updated website](https://product-dna-studio-preview.onrender.com/?v=599bf51). Text-only Refine uses verified gpt-6-sol at /v1/responses; initial analysis retains gpt-6-astra. The original map now has an integrated theme, uniform platforms, connection glow and summary ribbon. [Changed files, tests, real-model verification and limits](docs/original-refinement/DELIVERY.md).
+
+Descriptions below are historical: voice refinement and visible conversation history have been removed.
+
+---
+
 # Current branch: original PM Career Studio core iteration
 
 V2 is discontinued as the design baseline. This branch restores original commit `c065bdf` and incrementally improves CV-first analysis, grounded Recognition/Aspiration and on-demand content-only Refine. **Published 14 November 2026.** [Open the website](https://product-dna-studio-preview.onrender.com/?v=3a4a349) · [Deployment verification](docs/pm-core/PUBLISHED.md). [Changes, tests, limits and local use](docs/pm-core/DELIVERY.md). The historical product description below predates this focused iteration.

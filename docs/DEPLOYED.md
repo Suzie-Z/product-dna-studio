@@ -1,3 +1,9 @@
+# Original Experience Refinement — published 14 November 2026
+
+Application commit 599bf51061b44b6a8db280ecdec47b6e87944d73 is live on the existing API and frontend. Refine uses gpt-6-sol. [Verification and limits](original-refinement/DELIVERY.md).
+
+---
+
 # Original PM Career Studio core experience — published 14 November 2026
 
 [Open website](https://product-dna-studio-preview.onrender.com/?v=3a4a349). Runtime `3a4a3492b4e8cdd02b5de60b8f23d667e058a4b7` is live on the existing API and frontend. The CV-first original map, on-demand content-only Refine and one PNG export are published. [Deployment verification and limits](pm-core/PUBLISHED.md).
