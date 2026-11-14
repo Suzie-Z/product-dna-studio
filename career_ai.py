@@ -254,6 +254,8 @@ def provider(path,payload,timeout=90):
   failure=AppError(502,'The AI service is temporarily unavailable. Please try again.','provider_unavailable')
   try:
    detail=json.load(e).get('error',{})
+   if payload.get('model','').startswith('gpt-6-sol')and detail.get('code')in ['model_not_found','model_not_available']:
+    failure=AppError(503,'The configured GPT-6 Sol model is unavailable. Your current map is unchanged; the owner needs to check model access.','model_unavailable')
    failure.provider_detail={k:v for k,v in detail.items()if k in ['code','type','param']and isinstance(v,str)and re.fullmatch(r'[A-Za-z0-9_./-]{1,100}',v)}
   except Exception:pass
   raise failure
@@ -363,6 +365,8 @@ def process_refine(body):
  if previous['status']!='ready':raise AppError(400,'Generate your first map before refining it.','no_previous')
  if visual_preference(message)or re.search(r'\b(?:colou?rs?|palette|background|island shape|move.*icons?|change.*icons?|islands?|icons?|layout|mascot|avatar|warmer (?:colou?rs?|palette)|soften.*colou?r)\b|背景|配色|图标|岛屿|布局|换小人',message,re.I):
   return {'map':clarification('Would you like to use Generate a New Map for a different presentation, or change only the wording here?'),'change_summary':'Refine changes words and evidence only. Your current map and visual identity are unchanged.','accepted_source':None}
+ from refinement_validation import requests_blank,MESSAGE
+ if requests_blank(message):raise AppError(422,MESSAGE,'required_field_blank')
  if CREDENTIAL.search(message)and REQUEST_CLAIM.search(message)and not re.search(r'\b(?:remove|delete|omit|correct)\b|删除|去掉|纠正',message,re.I)and not has_credential_evidence(sources):
   return {'map':clarification('What qualification and relevant experience support that credential?'),'change_summary':'That credential needs supporting evidence. Your existing map is unchanged.','accepted_source':None}
  from semantic_refinement import refine

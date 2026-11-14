@@ -61,7 +61,7 @@ class CompleteFlow(unittest.TestCase):
     for item in d['journey']:item['highlights']=[{'label':label,'evidence_quote':item['evidence_quotes'][0]}for label in LABELS]
     for mobile in [False,True]:
      for side in ['left','right']:
-      m=page.evaluate('([d,m,s])=>buildDNAScene(d,m,{character_side:s}).metrics',[d,mobile,side]);self.assertTrue(m['ok']or bool(m['overflowFields']),(j,k,mobile,side,m['issues']));self.assertEqual(m['collisions'],[]);self.assertEqual(m['header']['title_center_x'],m['width']/2);self.assertGreater(m['header']['logo_gap'],0)
+      m=page.evaluate('([d,m,s])=>buildDNAScene(d,m,{character_side:s}).metrics',[d,mobile,side]);self.assertTrue(m['ok']or bool(m['overflowFields']),(j,k,mobile,side,m['issues']));self.assertEqual(m['collisions'],[]);self.assertTrue(m['header']['theme_in_header']);self.assertGreater(m['header']['logo_gap'],0)
   context.close()
 
  def test_long_copy_is_shortened_before_display_without_regeneration(self):

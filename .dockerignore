@@ -10,7 +10,7 @@
 !semantic_refinement.py
 !model_config.py
 !request_state.py
-!voice_input.py
+!refinement_validation.py
 !skills/
 !skills/**
 !visual_catalog.py

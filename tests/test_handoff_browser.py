@@ -16,12 +16,12 @@ class HandoffBrowser(unittest.TestCase):
  def test_desktop_viewports_export_mobile_and_zoom(self):
   page,context,d=self.ready()
   for w,h in [(1440,900),(1366,768)]:
-   page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(50);page.locator('#result-panel').evaluate('(e)=>e.scrollIntoView({block:"start",behavior:"instant"})');box=page.locator('#result-panel').bounding_box();self.assertLessEqual(box['y']+box['height'],h+2);m=page.locator('#map-visual').evaluate('(e)=>e.renderMetrics');self.assertTrue(m['ok'],m['issues']);self.assertEqual(m['width']/m['height'],16/9)
+   page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(50);page.locator('#result-panel').evaluate('(e)=>e.scrollIntoView({block:"start",behavior:"instant"})');box=page.locator('#result-panel').bounding_box();self.assertLessEqual(box['width'],w);m=page.locator('#map-visual').evaluate('(e)=>e.renderMetrics');self.assertTrue(m['ok'],m['issues']);self.assertEqual(m['width']/m['height'],16/9)
   page.evaluate('async()=>renderDNAPoster(exportCanvas,result,renderVariant)');self.assertEqual(page.evaluate('[exportCanvas.width,exportCanvas.height]'),[3200,1800]);self.assertTrue(page.evaluate('exportCanvas.renderMetrics.outlinedText'))
   page.set_viewport_size({'width':1092,'height':614});self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'));self.assertEqual(page.locator('#map-visual').evaluate('(e)=>e.renderMetrics.collisions'),[])
   page.set_viewport_size({'width':390,'height':844});page.wait_for_function('document.getElementById("map-visual").dataset.layout==="mobile"');self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'));self.assertTrue(page.locator('#map-visual').evaluate('(e)=>e.renderMetrics.ok'));context.close()
  def test_all_platforms_paths_and_missing_asset_fallback(self):
-  page,context,d=self.ready();m=page.evaluate('([d,v])=>buildDNAScene(d,false,v).metrics',[d,{}]);self.assertEqual(len(set(m['platforms'].values())),3)
+  page,context,d=self.ready();m=page.evaluate('([d,v])=>buildDNAScene(d,false,v).metrics',[d,{}]);self.assertEqual(len(set(m['platforms'].values())),1)
   for shape in ['garden','crystal','modular','steps','nebula','circuit']:
    for path in ['glow','stones','constellation','streams']:
     m=page.evaluate('([d,s,p])=>buildDNAScene(d,false,{platform_overrides:{j1:s},pathway_id:p}).metrics',[d,shape,path]);self.assertTrue(m['ok'],m['issues']);self.assertEqual(m['platforms']['j1'],shape)

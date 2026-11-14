@@ -6,7 +6,7 @@ from career_ai import AppError,process_generate,process_refine,process_review
 from generation_counts import snapshot as generation_stats,verify_storage_rollback
 from model_config import configuration,diagnostics,available_models,MODEL_OVERRIDE,USAGE,INTERNAL_TEST
 import request_state
-import voice_input
+
 ROOT=Path(__file__).parent/'preview'
 ALLOWED_ORIGINS={'https://product-dna-studio-preview.onrender.com'}|set(filter(None,os.environ.get('ALLOWED_ORIGINS','').split(',')))
 REQUEST_LOCK=threading.Lock();RECENT={};ACTIVE=threading.BoundedSemaphore(2)
@@ -40,6 +40,9 @@ class Handler(BaseHTTPRequestHandler):
   if path=='/api/stats':
    try:return self.reply(200,generation_stats())
    except Exception:return self.reply(503,{'error':'Generation count temporarily unavailable.'})
+  if path=='/api/refinement-model':
+   access=available_models();selected=configuration()['stages']['refinement']
+   return self.reply(200,{'requested_model':'gpt-6-sol','configured_model':selected,'availability_check':access['state'],'requested_model_available':('gpt-6-sol'in access['ids'])if access['state']=='checked'else None,'supported_model_ids':sorted(m for m in access['ids']if m=='gpt-6-sol'or m.startswith('gpt-6-sol-')),'endpoint':'https://api.openai.com/v1/responses'})
   if path=='/health':return self.reply(200,{'ok':True,'ai_configured':bool(os.environ.get('OPENAI_API_KEY')),'schema_version':'1.0',**configuration()})
   paths={'/':('index.html','text/html; charset=utf-8'),'/studio.js':('studio.js','text/javascript; charset=utf-8'),'/poster.js':('poster.js','text/javascript; charset=utf-8'),'/studio.css':('studio.css','text/css; charset=utf-8')}
   if path not in paths:return self.reply(404,{'error':'Not found.'})
@@ -49,20 +52,6 @@ class Handler(BaseHTTPRequestHandler):
   try:
    if not self.origin_allowed():raise AppError(403,'Origin not allowed.','origin_rejected')
    internal_key=os.environ.get('PM_INTERNAL_TEST_TOKEN','');internal=bool(internal_key and hmac.compare_digest(self.headers.get('X-PM-Internal-Test',''),internal_key));internal_token=INTERNAL_TEST.set(internal)
-   if self.path=='/api/internal/audio-fixture':
-    if not internal:raise AppError(403,'This diagnostic is restricted.','forbidden')
-    return self.reply(200,voice_input.synthetic_fixture(),'audio/mpeg')
-   if self.path=='/api/transcribe':
-    rate_limit(self.client_address[0]);length=int(self.headers.get('Content-Length','0'))
-    if not 16<=length<=voice_input.MAX_AUDIO:raise AppError(413,'Record a shorter segment under 8 MB.','audio_too_large')
-    mime=self.headers.get('Content-Type','');self.connection.settimeout(20);audio=self.rfile.read(length);voice_input.validate_audio(audio,mime);acquired=ACTIVE.acquire(blocking=False)
-    if not acquired:raise AppError(429,'Voice processing is busy. Retry shortly.','busy')
-    rid=self.headers.get('X-Request-ID')or'req_'+secrets.token_hex(16);state,cached=request_state.begin(rid,{'audio_hash':hashlib.sha256(audio).hexdigest(),'mime':mime,'_endpoint':self.path,'_internal':internal});cache_key=rid
-    if state=='replay':cache_finished=True;return self.reply(200,cached)
-    if state in ['pending','conflict']:cache_key=None;raise AppError(409,'The recording request is already processing or changed. Retry shortly.','voice_request_conflict')
-    usage_token=USAGE.set([]);result=voice_input.transcribe(audio,mime)
-    if internal:result['usage_metrics']=USAGE.get()
-    request_state.finish(rid,result);cache_finished=True;return self.reply(200,result)
    handlers={'/api/internal/models':lambda b:diagnostics(),'/api/internal/counter-check':lambda b:verify_storage_rollback(),'/api/career-dna/generate':process_generate,'/api/career-dna/refine':process_refine,'/api/career-dna/review':process_review}
    if self.path not in handlers:raise AppError(404,'Not found.','not_found')
    if not self.headers.get('Content-Type','').startswith('application/json'):raise AppError(415,'Use a JSON request.','content_type')

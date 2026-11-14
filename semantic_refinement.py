@@ -20,8 +20,10 @@ def patch_schema(previous,sources,reflections=None):
   for field,spec in props.items():
    if field in ['id','order','icon']:continue
    branches.append(a.obj({'path':{'type':'string','enum':['/'+group+'/'+ident+'/'+field for ident in ids]},'value':spec}))
+  detail='highlights'if group=='journey'else'methods'
+  for item in previous[group]:
+   for index,_ in enumerate(item.get(detail,[])):branches.append(a.obj({'path':{'type':'string','enum':['/'+group+'/'+item['id']+'/'+detail+'/'+str(index)+'/label']},'value':a.text(64 if detail=='highlights'else 24)}))
   branches.append(a.obj({'path':{'type':'string','enum':['/'+group]},'value':bounded['properties'][group]}))
-  branches.append(a.obj({'path':{'type':'string','enum':['/'+('journey_order'if group=='journey'else'strength_order')]},'value':a.array({'type':'string','enum':ids},4,1)}))
  for key in ['career_signature','superpower','journey_type']:
   branches.append(a.obj({'path':{'type':'string','enum':['/'+key]},'value':a.SCHEMA['properties'][key]}))
  if reflections:
@@ -43,6 +45,8 @@ def merge(previous,changes,sources):
     result[group]=[items[i]for i in value]
    else:result[key]=value
    if key in ['journey','strengths']:touched.update((key,i['id'])for i in result[key])
+  elif len(bits)==5:
+   group,ident,collection,index,field=bits;item=next(i for i in result[group]if i['id']==ident);item[collection][int(index)][field]=value;touched.add((group,ident))
   else:
    group,ident,field=bits;item=next((i for i in result[group]if i['id']==ident),None)
    if item is None:raise ValueError('patch references a missing stable ID')
@@ -64,6 +68,9 @@ def merge(previous,changes,sources):
 def quoted_targets(previous,message):
  if not re.search(r'change|replace|rename|rewrite|shorten|edit|update|use|改|换|缩短|精简|修改|调整',message,re.I):return set()
  phrases=re.findall(r"[\"'“「](.+?)[\"'”」]",message);matches=[]
+ direct=re.search(r'\b(?:change|replace)\s+(.+?)\s+(?:to|with)\s+(.+?)[.!]?$',message,re.I)
+ if direct:phrases.extend([direct.group(1).strip(' "“”'),direct.group(2).strip(' "“”')])
+
  for phrase in phrases:
   for key in ['career_signature','superpower']:
    if a.normalized(phrase)==a.normalized(previous[key]):matches.append(('/'+key,None))
@@ -72,11 +79,12 @@ def quoted_targets(previous,message):
     for field in ['label','description']:
      if a.normalized(phrase)==a.normalized(item[field]):matches.append(('/'+group+'/'+item['id']+'/'+field,(group,item)))
     field='highlights'if group=='journey'else'methods'
-    if any(a.normalized(phrase)==a.normalized(d['label'])for d in item.get(field,[])):matches.append(('/'+group+'/'+item['id']+'/'+field,(group,item)))
+    for index,detail in enumerate(item.get(field,[])):
+     if a.normalized(phrase)==a.normalized(detail['label']):matches.append(('/'+group+'/'+item['id']+'/'+field+'/'+str(index)+'/label',(group,item)))
  unique={path:target for path,target in matches}
  if len(unique)!=1:return set()
  path,target=next(iter(unique.items()))
- if path.endswith('/label')and target:
+ if path.endswith('/label')and len(path.strip('/').split('/'))==3 and target:
   # A quoted heading can address its card/role; it does not imply a rename.
   direct=bool(re.search(r'\brename\b',message,re.I)or(len(phrases)>=2 and re.search(r'\b(?:change|replace)\b.*?\b(?:to|with)\b|改成|改为|替换为',message,re.I)))
   if not direct:
@@ -110,10 +118,13 @@ def refine(previous,sources,message,context,intelligence=None,selected_version=N
  if fit_fields:payload['layout_instruction']='Shorten ONLY these fields into complete professional English. Labels <=26 characters; descriptions <=60; method labels <=20; highlights <=28 characters and at most five words on each line. Preserve meaning and literal evidence. No clipped text or unfinished fragments.'
  payload['reflections']=reflections
  payload['edit_history']=[{'instruction':a.clean_source(str(h.get('instruction',''))[:1500]),'summary':a.clean_source(str(h.get('summary',''))[:220])}for h in edit_history[-4:]if isinstance(h,dict)]if isinstance(edit_history,list)else[]
- prompt=PATCH_PROMPT+'\nCONTENT-ONLY REFINEMENT: Never change icons, islands, pathways, colors, layout or visual configuration. Preserve all unrelated content. Recognition and Aspiration are separate sections, editable via their dedicated paths when present. Aspiration offers supported possibilities, never a prescribed job or invented seniority. If a request is ambiguous ask exactly one focused question instead of modifying several sections. Sounding more senior means precise judgement, scope and trade-offs evidenced in the CV; never inflate leadership. A pasted sentence is optional, not required.' +'\nFor copied original text and a requested replacement, edit only the matched field. If replacement is too long, summarise its professional meaning to fit. Keep labels concise and descriptions under65 characters when possible. Copy exact source quotes; they need not come from an enum. Do not change facts or award unsupported credentials.'
+ prompt=PATCH_PROMPT+'\nCONTENT-ONLY REFINEMENT: Never change icons, islands, pathways, colors, layout or visual configuration. Preserve all unrelated content. Recognition and Aspiration are separate sections, editable via their dedicated paths when present. Aspiration offers supported possibilities, never a prescribed job or invented seniority. If a request is ambiguous ask exactly one focused question instead of modifying several sections. Sounding more senior means precise judgement, scope and trade-offs evidenced in the CV; never inflate leadership. A pasted sentence is optional, not required. Never propose a Yes/No replacement confirmation. Blank required fields must be rejected as validation, without invented alternatives. Use one exact leaf path for an identified keyword/tag; keep its siblings and evidence unchanged.' +'\nFor copied original text and a requested replacement, edit only the matched field. If replacement is too long, summarise its professional meaning to fit. Keep labels concise and descriptions under65 characters when possible. Copy exact source quotes; they need not come from an enum. Do not change facts or award unsupported credentials.'
  for _ in range(2):
   response=a.structured(payload,schema,prompt,stage='refinement')
   try:
+   if not isinstance(response,dict):raise ValueError('Malformed patch response')
+   from refinement_validation import contains_blank,MESSAGE
+   if contains_blank(response.get('changes',[])):raise a.AppError(422,MESSAGE,'required_field_blank')
    a.schema_validate(response,schema);a.english(response['change_summary'],220)
    if response['status']=='needs_more_info':
     if response['changes']:raise ValueError('clarification must not contain a patch')
