@@ -1,3 +1,9 @@
+# Original PM Career Studio core experience — published 14 November 2026
+
+[Open website](https://product-dna-studio-preview.onrender.com/?v=3a4a349). Runtime `3a4a3492b4e8cdd02b5de60b8f23d667e058a4b7` is live on the existing API and frontend. The CV-first original map, on-demand content-only Refine and one PNG export are published. [Deployment verification and limits](pm-core/PUBLISHED.md).
+
+---
+
 # PM Career Studio handoff — published 12 November 2026
 
 Runtime `717d3961f6246c5fc3332defe86763fde1f9ba18` is live on both services. **108 tests passed**, plus live provider/browser refinement, Undo and single-PNG export checks. [Delivery report and remaining limits](PM_STUDIO_HANDOFF_DELIVERY.md).

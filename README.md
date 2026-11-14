@@ -1,6 +1,6 @@
 # Current branch: original PM Career Studio core iteration
 
-V2 is discontinued as the design baseline. This branch restores original commit `c065bdf` and incrementally improves CV-first analysis, grounded Recognition/Aspiration and on-demand content-only Refine. **Not deployed to production.** [Changes, tests, limits and local use](docs/pm-core/DELIVERY.md). The historical product description below predates this focused iteration.
+V2 is discontinued as the design baseline. This branch restores original commit `c065bdf` and incrementally improves CV-first analysis, grounded Recognition/Aspiration and on-demand content-only Refine. **Published 14 November 2026.** [Open the website](https://product-dna-studio-preview.onrender.com/?v=3a4a349) · [Deployment verification](docs/pm-core/PUBLISHED.md). [Changes, tests, limits and local use](docs/pm-core/DELIVERY.md). The historical product description below predates this focused iteration.
 
 ---
 

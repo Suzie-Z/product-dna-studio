@@ -2,7 +2,7 @@
 
 14 November 2026 (Australia/Sydney).
 
-V2 is discontinued as the product baseline. This implementation starts from original commit `c065bdfccc5d37cf336b9e40acc62c8adfeab142` on the dedicated `pm-core-experience` branch. The V2 branch remains recoverable as history. Existing production branches and Render services have not been updated.
+V2 is discontinued as the product baseline. This implementation starts from original commit `c065bdfccc5d37cf336b9e40acc62c8adfeab142` on the dedicated `pm-core-experience` branch. The V2 branch remains recoverable as history. The implementation was subsequently published at the user’s request; see [publication and verification](PUBLISHED.md).
 
 ## Delivered
 
@@ -53,7 +53,7 @@ Existing model variables, daily limits, production counter tables and deployment
 
 ## Limits and release status
 
-- **Not deployed.** The current production site is unchanged. The dedicated branch is ready for review rather than a published replacement.
+- **Published 14 November 2026 after explicit approval.** See [publication verification](PUBLISHED.md). The earlier engineering preview is now the live original-style replacement.
 - **Real-model content quality is not yet verified.** The new prompts and structured contracts are implemented, but these tests do not establish actual model insight quality, latency, cost, semantic entailment or English fluency. Source links are provenance, not independent verification of a career. Live synthetic PM/CV evaluation is still required before release acceptance.
 - Recognition and Aspiration are supporting on-page sections. The PNG intentionally retains the original map composition; these longer paragraphs are not inserted into the artwork or exported image.
 - Adding/removing a capability reflows cards within the original template. It does not create new artwork or change the design system. Ordinary wording edits retain the existing visual state; the SVG is rerendered to show new text using the same assets.
