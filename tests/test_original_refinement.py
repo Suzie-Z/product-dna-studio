@@ -14,6 +14,14 @@ class EditContracts(unittest.TestCase):
   patch_value={'status':'ready','changes':[{'path':'/strengths/k1/methods/0/label','value':'Design for lasting value'}],'clarification_question':None,'change_summary':'Updated the chosen skill indicator.'}
   with patch('career_ai.moderate'),patch('career_ai.structured',return_value=patch_value):out=a.process_refine({'sources':[SOURCE],'previous':previous,'message':message,'context_consent':True})
   expected=copy.deepcopy(previous);expected['strengths'][0]['methods'][0]['label']='Design for lasting value';self.assertEqual(out['map'],expected);self.assertEqual(out['presentation_patch'],{})
+ def test_conclusion_is_the_summary_banner_not_a_reflection_question(self):
+  self.assertEqual(refine.named_sections('Make only the conclusion less generic.'),{'/superpower'})
+  seen={}
+  def response(payload,*args,**kwargs):
+   seen.update(payload);return {'status':'ready','changes':[{'path':'/superpower','value':'Turning user research into evidence led growth decisions'}],'clarification_question':None,'change_summary':'Made the concluding summary more specific.'}
+  previous=make_map(1,1)
+  with patch('career_ai.moderate'),patch('career_ai.structured',side_effect=response):out=a.process_refine({'sources':[SOURCE],'previous':previous,'reflections':REFLECTIONS,'message':'Make only the conclusion less generic.','context_consent':True})
+  self.assertEqual(out['changed_fields'],['/superpower']);self.assertEqual(out['reflections'],REFLECTIONS);self.assertIn('/superpower',seen['section_definitions']);self.assertEqual(seen['map_context']['capabilities'][0]['id'],'k1')
  def test_blank_instruction_has_inline_error_without_model(self):
   for message in ['Clear the description','Leave the theme blank','Change the title to ""','Make this field empty','把标题清空']:
    with patch('career_ai.structured')as model,patch('career_ai.moderate'):

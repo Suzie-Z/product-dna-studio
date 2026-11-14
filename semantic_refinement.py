@@ -92,6 +92,16 @@ def quoted_targets(previous,message):
    return {'/'+group+'/'+item['id']+'/'+field for field in fields}
  return {path}
 
+def named_sections(message):
+ paths=set()
+ for pattern,path in [
+  (r'\b(?:conclusion|concluding (?:statement|insight)|summary banner|bottom summary|final insight)\b|结论|总结横幅','/superpower'),
+  (r'\b(?:personal dna theme|career signature)\b|个人DNA主题','/career_signature'),
+  (r'\brecognition\b|认可段落','/recognition'),
+  (r'\b(?:possibilities to explore|aspiration)\b|未来方向|探索方向','/aspiration')]:
+  if re.search(pattern,message,re.I):paths.add(path)
+ return paths
+
 def scoped_schema(schema,paths):
  out=copy.deepcopy(schema);branches=[]
  for branch in out['properties']['changes']['items']['anyOf']:
@@ -105,7 +115,7 @@ def refine(previous,sources,message,context,intelligence=None,selected_version=N
  if not isinstance(context,str)or len(context)>2000:raise a.AppError(400,'The update context is too long.','invalid_context')
  correction={'source_id':'src_'+secrets.token_hex(8),'source_type':'typed_story','source_label':'User-provided correction or instruction','content':a.clean_source(message.strip())};sources=a.sources_from_request(sources+[correction]);a.moderate('\n'.join(s['content']for s in sources));schema=patch_schema(previous,sources,reflections)
  payload={'selected_version':selected_version,'sources':sources,'previous':previous,'refinement_request':correction['content'],'clarification_context':context,'editable_sections':{'journey':[{'id':i['id'],'label':i['label'],'two_lines_field':'highlights'}for i in previous['journey']],'strengths':[{'id':i['id'],'label':i['label']}for i in previous['strengths']]}};last=''
- paths=set(fit_fields or[])or quoted_targets(previous,message)
+ paths=set(fit_fields or[])or quoted_targets(previous,message)or named_sections(message)
  if paths:
   if not fit_fields:paths.update(p for b in schema['properties']['changes']['items']['anyOf']for p in b['properties']['path']['enum']if p.startswith('/visual/'))
   schema=scoped_schema(schema,paths)
@@ -117,8 +127,11 @@ def refine(previous,sources,message,context,intelligence=None,selected_version=N
   payload['editable_sections']={'allowed_paths':sorted(paths)}
  if fit_fields:payload['layout_instruction']='Shorten ONLY these fields into complete professional English. Labels <=26 characters; descriptions <=60; method labels <=20; highlights <=28 characters and at most five words on each line. Preserve meaning and literal evidence. No clipped text or unfinished fragments.'
  payload['reflections']=reflections
+ payload['section_definitions']={'/career_signature':'Personal DNA Theme inside the title area','/superpower':'The conclusion / concluding insight / summary banner below the capability cards','/recognition':'Recognition paragraph inside Your Next Chapter','/aspiration':'Possibilities to Explore inside Your Next Chapter'}
+ payload['map_context']={key:previous[key]for key in ['career_signature','superpower']}
+ payload['map_context']['capabilities']=[{'id':s['id'],'label':s['label'],'description':s['description'],'methods':[m['label']for m in s.get('methods',[])]}for s in previous['strengths']]
  payload['edit_history']=[{'instruction':a.clean_source(str(h.get('instruction',''))[:1500]),'summary':a.clean_source(str(h.get('summary',''))[:220])}for h in edit_history[-4:]if isinstance(h,dict)]if isinstance(edit_history,list)else[]
- prompt=PATCH_PROMPT+'\nCONTENT-ONLY REFINEMENT: Never change icons, islands, pathways, colors, layout or visual configuration. Preserve all unrelated content. Recognition and Aspiration are separate sections, editable via their dedicated paths when present. Aspiration offers supported possibilities, never a prescribed job or invented seniority. If a request is ambiguous ask exactly one focused question instead of modifying several sections. Sounding more senior means precise judgement, scope and trade-offs evidenced in the CV; never inflate leadership. A pasted sentence is optional, not required. Never propose a Yes/No replacement confirmation. Blank required fields must be rejected as validation, without invented alternatives. Use one exact leaf path for an identified keyword/tag; keep its siblings and evidence unchanged.' +'\nFor copied original text and a requested replacement, edit only the matched field. If replacement is too long, summarise its professional meaning to fit. Keep labels concise and descriptions under65 characters when possible. Copy exact source quotes; they need not come from an enum. Do not change facts or award unsupported credentials.'
+ prompt=PATCH_PROMPT+'\nCONTENT-ONLY REFINEMENT: Never change icons, islands, pathways, colors, layout or visual configuration. Preserve all unrelated content. Recognition and Aspiration are separate sections, editable via their dedicated paths when present. Aspiration offers supported possibilities, never a prescribed job or invented seniority. If a request is ambiguous ask exactly one focused question instead of modifying several sections. Sounding more senior means precise judgement, scope and trade-offs evidenced in the CV; never inflate leadership. A pasted sentence is optional, not required. Never propose a Yes/No replacement confirmation. Blank required fields must be rejected as validation, without invented alternatives. Use one exact leaf path for an identified keyword/tag; keep its siblings and evidence unchanged. Use section_definitions to resolve ordinary UI language: conclusion means /superpower, the highlighted summary banner. Recognition and Aspiration are separate optional reading paragraphs; do not ask which of these is the conclusion when the user names the conclusion.' +'\nFor copied original text and a requested replacement, edit only the matched field. If replacement is too long, summarise its professional meaning to fit. Keep labels concise and descriptions under65 characters when possible. Copy exact source quotes; they need not come from an enum. Do not change facts or award unsupported credentials.'
  for _ in range(2):
   response=a.structured(payload,schema,prompt,stage='refinement')
   try:
