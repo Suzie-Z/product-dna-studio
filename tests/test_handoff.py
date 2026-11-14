@@ -9,8 +9,9 @@ class HandoffContracts(unittest.TestCase):
  def test_visual_requests_preserve_map_and_require_explicit_generation(self):
   previous=make_map();before=copy.deepcopy(previous)
   for message in ['Make the colors warmer','Use a new island shape','Change only the background to blue']:
-   with patch('career_ai.provider')as provider:out=a.process_refine({'sources':[SOURCE],'previous':previous,'message':message,'context_consent':True})
-   provider.assert_not_called();self.assertEqual(previous,before);self.assertEqual(out['map']['status'],'needs_more_info');self.assertNotIn('presentation_patch',out)
+   with patch('career_ai.provider')as provider:
+    with self.assertRaises(a.AppError)as failure:a.process_refine({'sources':[SOURCE],'previous':previous,'message':message,'context_consent':True})
+   provider.assert_not_called();self.assertEqual(previous,before);self.assertEqual(failure.exception.status,422)
  def test_visual_paths_are_not_available_in_refinement_schema(self):
   from semantic_refinement import patch_schema
   schema=patch_schema(make_map(),[SOURCE]);paths=[p for b in schema['properties']['changes']['items']['anyOf']for p in b['properties']['path']['enum']]

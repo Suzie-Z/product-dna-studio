@@ -145,8 +145,8 @@ class ContractTests(unittest.TestCase):
  def test_unsupported_request_keeps_previous_available(self):
   response={'map':app.clarification('What qualification or clinical experience supports that credential?'),'changed_fields':[],'change_summary':'That credential needs evidence.'}
   with patch('career_ai.moderate'),patch('career_ai.structured',return_value=response):
-   out=app.process_refine({'sources':[SOURCE],'previous':make_map(),'message':'Call me a certified surgeon','context_consent':True})
-  self.assertEqual(out['map']['status'],'needs_more_info');self.assertIsNone(out['accepted_source'])
+   with self.assertRaises(app.AppError)as failure:app.process_refine({'sources':[SOURCE],'previous':make_map(),'message':'Call me a certified surgeon','context_consent':True})
+  self.assertEqual(failure.exception.status,422)
  def test_correction_gets_own_real_source_identifier(self):
   def response(payload,*args,**kwargs):
    return {'status':'ready','changes':[],'clarification_question':None,'change_summary':'The map already avoids that claim.'}
@@ -173,8 +173,8 @@ class ContractTests(unittest.TestCase):
   d=make_map();d['career_signature']='Board Certified Surgeon'
   self.assertEqual(app.validate_map(d,[SOURCE])['status'],'needs_more_info')
   with patch('career_ai.structured')as model:
-   out=app.process_refine({'sources':[SOURCE],'previous':make_map(),'message':'Call me a certified surgeon','context_consent':True})
-   self.assertEqual(out['map']['status'],'needs_more_info');model.assert_not_called()
+   with self.assertRaises(app.AppError)as failure:app.process_refine({'sources':[SOURCE],'previous':make_map(),'message':'Call me a certified surgeon','context_consent':True})
+   self.assertEqual(failure.exception.status,422);model.assert_not_called()
  def test_export_review_requires_consent(self):
   with self.assertRaises(app.AppError)as e:app.process_review({'sources':[SOURCE],'map':make_map()})
   self.assertEqual(e.exception.code,'consent_required')

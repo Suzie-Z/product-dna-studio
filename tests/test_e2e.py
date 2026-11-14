@@ -49,7 +49,7 @@ class CompleteFlow(unittest.TestCase):
   # Each browser case is independent; the shared localhost transport has one IP.
   ai_server.RECENT.clear()
  def page(self,width=1440):
-  context=self.browser.new_context(extra_http_headers={'X-PM-Internal-Test':'test-internal-only'},viewport={'width':width,'height':1000});context.route('https://fonts.googleapis.com/**',lambda r:r.abort());context.route('https://fonts.gstatic.com/**',lambda r:r.abort());page=context.new_page();page.goto(self.url);page.evaluate('pmFontsReady');page.locator('#begin').click();return page,context
+  context=self.browser.new_context(extra_http_headers={'X-PM-Internal-Test':'test-internal-only'},viewport={'width':width,'height':1000});context.route('https://fonts.googleapis.com/**',lambda r:r.abort());context.route('https://fonts.gstatic.com/**',lambda r:r.abort());page=context.new_page();page.goto(self.url);page.evaluate('pmFontsReady');return page,context
 
 
  def test_full_highlights_header_safe_art_and_layout_variants(self):
@@ -94,7 +94,8 @@ class CompleteFlow(unittest.TestCase):
   d=make_map(1,1);d['career_signature']='<script>alert(1)</script>'
   page.evaluate('(d)=>renderDNAMap(document.querySelector("#map-visual"),d)',d)
   self.assertEqual(page.locator('#map-visual script').count(),0)
-  with self.assertRaises(Exception):page.evaluate('(d)=>buildDNAScene(d)',make_map(5,1))
+  invalid=make_map(5,1);invalid['journey'].append(copy.deepcopy(invalid['journey'][0]))
+  with self.assertRaises(Exception):page.evaluate('(d)=>buildDNAScene(d)',invalid)
   context.close()
  def test_chronological_mobile_dates_have_readable_reserved_height(self):
   page,context=self.page()

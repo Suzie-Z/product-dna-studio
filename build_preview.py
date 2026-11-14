@@ -12,8 +12,11 @@ html=html.replace('<script src="/pm-library.js"></script>','<script>\n'+(root/'p
 html=html.replace('<script src="/pm-fonts.js"></script>','<script>\n'+(root/'pm-fonts.js').read_text()+'\n</script>')
 html=html.replace('<script src="/poster.js"></script>','<script>\n'+(root/'poster.js').read_text()+'\n</script>')
 html=html.replace('<script src="/studio.js"></script>','<script>\n'+(root/'studio.js').read_text()+'\n</script>')
-for asset in ['pm-career-dna-logo.png','career-world-atlas.png','pm-characters-24.png','pm-icons-24.png']:
+for asset in ['pm-career-dna-logo.png','career-world-atlas.png','pm-characters-24.png','pm-icons-24.png','pm-explorer-full.png']:
  html=html.replace('/assets/'+asset,'data:image/png;base64,'+base64.b64encode((root/'assets'/asset).read_bytes()).decode())
+html=html.replace('</head>', '<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/pm-heading.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/pm-body.woff2"><script>document.documentElement.classList.add("fonts-loading");window.uiFontsReady=Promise.all([document.fonts.load("600 32px PMDNAHeading"),document.fonts.load("600 16px PMDNABody")]).finally(()=>document.documentElement.classList.remove("fonts-loading"));</script></head>')
+for asset in ['pm-heading.woff2','pm-body.woff2']:
+ html=html.replace('/assets/'+asset,'data:font/woff2;base64,'+base64.b64encode((root/'assets'/asset).read_bytes()).decode())
 for asset in ['pm-heading.ttf','pm-body.ttf']:
  html=html.replace('/assets/'+asset,'data:font/ttf;base64,'+base64.b64encode((root/'assets'/asset).read_bytes()).decode())
 (root/'index.html').write_text(html)

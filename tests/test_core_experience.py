@@ -53,13 +53,13 @@ class CoreBrowser(unittest.TestCase):
   page.locator('#undo').click();page.wait_for_function('activeVersion.number===2&&!busy');page.locator('#edit-map').click();page.screenshot(path=str(ART/'refine-on-demand.png'),full_page=True);page.locator('#close-refine').click()
   with page.expect_download()as download:page.locator('#save').click()
   file=ART/'single-map.png';download.value.save_as(str(file));from PIL import Image
-  with_image=Image.open(file);self.assertEqual(with_image.size,(3200,1800));with_image.close();self.assertEqual(page.locator('#map-visual > svg').count(),1);context.close()
+  with_image=Image.open(file);self.assertEqual(with_image.size,(3200,2400));with_image.close();self.assertEqual(page.locator('#map-visual > svg').count(),1);context.close()
  def test_replacement_cv_runs_full_analysis_without_old_sources(self):
   page,context=self.ready();requests=[];page.on('request',lambda r:requests.append(r.post_data_json)if r.url.endswith('/generate')else None);page.locator('#edit-map').click();self.upload(page,'replacement.docx','I am a growth product manager. I owned onboarding requirements, user research and prioritised growth experiments.');self.assertIn('new analysis',page.locator('.replacement-cv').inner_text());self.assertEqual(page.locator('#generate').inner_text(),'Analyze New CV')
   with patch('career_ai.provider',side_effect=provider):page.locator('#generate').click();page.wait_for_function('activeVersion.number===2&&!busy')
   self.assertEqual(len(requests),1);self.assertEqual(len(requests[0]['sources']),1);self.assertEqual(requests[0]['sources'][0]['source_label'],'replacement.docx');self.assertNotIn('previous',requests[0]);self.assertEqual(page.evaluate('activeVersion.parent_id'),None);context.close()
- def test_visual_request_asks_question_and_keeps_existing_map(self):
-  page,context=self.ready();old=page.evaluate('({map:result,visual:renderVariant})');page.locator('#edit-map').click();page.locator('#story').fill('Change the background to blue');page.locator('#generate').click();page.wait_for_function('!busy&&pendingQuestion.length>0');self.assertEqual(page.evaluate('({map:result,visual:renderVariant})'),old);self.assertEqual(page.evaluate('versions.length'),1);self.assertIn('Generate a New Map',page.locator('#refine-status').inner_text());context.close()
+ def test_visual_request_has_inline_error_and_keeps_existing_map(self):
+  page,context=self.ready();old=page.evaluate('({map:result,visual:renderVariant})');page.locator('#edit-map').click();page.locator('#story').fill('Change the background to blue');page.locator('#generate').click();page.wait_for_function('!busy&&document.getElementById("refine-status").textContent.includes("Generate a New Map")');self.assertEqual(page.evaluate('({map:result,visual:renderVariant})'),old);self.assertEqual(page.evaluate('versions.length'),1);self.assertIn('Generate a New Map',page.locator('#refine-status').inner_text());context.close()
  def test_failed_update_retries_same_request_and_keeps_visuals(self):
   page,context=self.ready();old=page.evaluate('structuredClone(renderVariant)');requests=[]
   def intercept(route):
