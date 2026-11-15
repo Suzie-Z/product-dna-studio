@@ -15,7 +15,7 @@ function initialSources(){return cvText?[{source_id:cvId,source_type:'cv',source
 function sources(){return activeVersion?clone(activeVersion.sources):initialSources()}
 function canGenerate(){return activeVersion?(forceFullGeneration||$('story').value.trim().length>=3||Boolean(cvDirty&&cvText)):Boolean(cvText)}
 function updateButtons(){
- $('generate').disabled=busy||reading||!canGenerate();$('generate').textContent=busy?(operation==='refine'?COPY.updating:COPY.reading):activeVersion?(cvDirty?'Analyze New CV':forceFullGeneration?'Generate New Map':COPY.apply):COPY.generate;
+ $('generate').disabled=busy||reading||!canGenerate();$('generate').textContent=busy?(operation==='refine'&&$('refine-dialog').open?COPY.apply:COPY.reading):activeVersion?(cvDirty?'Analyze New CV':forceFullGeneration?'Generate New Map':COPY.apply):COPY.generate;
  for(const key of ['story','upload','replace-cv','clear-cv','version-select','edit-map','refine-upload','regenerate-map'])$(key).disabled=busy||reading;
  $('save').disabled=busy||!result;$('undo').disabled=busy||!versions.some(v=>v.number===activeVersion?.parent_id);$('retry').disabled=busy;$('refine-retry').disabled=busy||reading;$('refine-progress').classList.toggle('hidden',!busy||operation!=='refine');
  $('composer-label').textContent='Tell us what you’d like to change';$('story').placeholder=activeVersion?COPY.refinePlaceholder:COPY.contextPlaceholder;$('composer-helper').textContent=activeVersion?COPY.refineHelper:COPY.contextHelper;
@@ -53,7 +53,7 @@ $('file').onchange=async e=>{
 };
 function showError(s){$('refine-status').textContent=s;$('refine-retry').classList.toggle('hidden',!pendingRequest);$('generation-error').textContent=s;$('generation-error').classList.remove('hidden');$('retry').classList.toggle('hidden',!pendingRequest)}
 async function run(kind,body){
- busy=true;controller=new AbortController();$('loading').classList.remove('hidden');$('step-two').classList.remove('hidden');$('generation-error').classList.add('hidden');$('retry').classList.add('hidden');updateButtons();
+ busy=true;controller=new AbortController();$('loading').classList.toggle('hidden',kind==='refine'&&$('refine-dialog').open);$('step-two').classList.remove('hidden');$('generation-error').classList.add('hidden');$('retry').classList.add('hidden');updateButtons();
  const epoch=interactionEpoch;operation=kind;$('loading-title').textContent=kind==='refine'?COPY.updating:COPY.reading;updateButtons();$('loading-label').textContent=COPY.readingDetail;$('loading-estimate').textContent=kind==='refine'?'A few moments for your changes.':COPY.readingEstimate;
  const slow=setTimeout(()=>{$('loading-label').textContent='This is taking longer. Your input and previous versions are still here.'},90000),timeout=setTimeout(()=>controller.abort(),480000);
  try{const response=await fetch(API_ORIGIN+'/api/career-dna/'+kind,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal});let data;try{data=await response.json()}catch{throw Error('The AI service is waking up. Wait a moment, then retry.')}if(!response.ok)throw Error(data.error||'This request could not complete. Please retry.');if(epoch!==interactionEpoch)return null;return data}
@@ -82,7 +82,7 @@ async function generate(retry=false){
   if(base)Object.assign(body,{previous:clone(base.map),map_version:base.number,career_intelligence:base.intelligence,visual:clone(base.variant),original_visual:clone(versions[0]?.variant||base.variant),reflections:clone(base.reflections||null),message:$('story').value.trim()||'Use my newly uploaded CV to update the existing map. Preserve unchanged facts and clarify conflicts.',context_consent:true});
   work={kind,body,base:base?.number??null,variant:base?clone(base.variant):null,cv:base&&!cvDirty?clone(base.cv):{name:cvName,text:cvText,id:cvId}};pendingRequest=work;
  }
- if(!work||turnEpoch!==interactionEpoch){updateButtons();return}work.epoch=turnEpoch;if(!$('refine-dialog').open)scrollToStep('step-two');status(work.kind==='refine'?'Applying your changes…':'Reading your CV…');let data=await run(work.kind,work.body);if(!data)return;
+ if(!work||turnEpoch!==interactionEpoch){updateButtons();return}work.epoch=turnEpoch;if(!$('refine-dialog').open)scrollToStep('step-two');status(work.kind==='refine'?'':'Reading your CV…');let data=await run(work.kind,work.body);if(!data)return;
  if(data.map.status==='ready'){data=await fitMap(data,work);if(!data||turnEpoch!==interactionEpoch)return;}
  if(data.map.status==='needs_more_info'){pendingRequest=null;if(work.kind==='refine'){status("We couldn't identify the text to update. Please include the exact sentence you'd like to change.");return;}pendingQuestion=data.map.clarification_question;$('initial-clarification').textContent=pendingQuestion;$('initial-clarification').classList.remove('hidden');status(pendingQuestion+' Upload a CV with the relevant PM experience to continue.');return;}
  if(work.base!==null&&data.base_version!==work.base){showError('This update belongs to a different version. Restore your preferred version and retry.');return}
@@ -113,4 +113,4 @@ document.addEventListener('keydown',e=>{if(e.key==='Tab')document.body.classList
 window.addEventListener('pagehide',()=>{interactionEpoch++;controller?.abort();$('story').value='';$('map-visual').replaceChildren();$('journey-evidence').replaceChildren();$('version-select').replaceChildren();$('result-panel').classList.add('hidden');window.clearDNAMap?.();versions=[];versionSerial=0;activeVersion=null;result=null;cvName='';cvText='';pendingRequest=null;syncCV();updateButtons();exportCanvas.width=0;exportCanvas.height=0});
 updateButtons();loadStats();
 
-for(const detail of [$("privacy"),$("privacy-technical")])detail.addEventListener("toggle",()=>detail.querySelector("summary").setAttribute("aria-expanded",String(detail.open)));
+for(const detail of [$("privacy")])detail.addEventListener("toggle",()=>detail.querySelector("summary").setAttribute("aria-expanded",String(detail.open)));

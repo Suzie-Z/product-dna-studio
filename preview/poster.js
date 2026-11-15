@@ -24,14 +24,14 @@ function build(data,mobile=false,variant){
  const resolved=resolveVariant(variant),base=resolved.theme,theme={...base,background:[...base.background],accents:[...base.accents]},avatar=resolved.avatar,W=mobile?760:1600,n=data.journey.length,k=data.strengths.length;
  // Warm dimensional surfaces adapt to the accepted palette; positions never depend on copy.
  const peach=theme.id==='peach_coral'||theme.id==='warm_yellow',ink='#171333',secondary='#514565',accent=peach?'#f39d83':theme.primary;
- const hasDates=data.journey.some(j=>j.date_label),journeyY=mobile?220:205,unit=(W-160)/n,mobileRows=data.journey.map(()=>300),journeyH=mobile?80+n*300:400,bridgeY=mobile?journeyY+journeyH+15:620,capY=mobile?bridgeY+100:700,cardH=mobile?430:350,capH=mobile?40+k*(cardH+22):365,summaryY=capY+capH+30,H=mobile?summaryY+200:1200;
+ const hasDates=data.journey.some(j=>j.date_label),journeyY=mobile?220:205,unit=(W-160)/n,mobileRows=data.journey.map(()=>300),journeyH=mobile?80+n*300:400,bridgeY=mobile?journeyY+journeyH+15:620,capY=mobile?bridgeY+104:704,cardH=mobile?446:360,capH=mobile?40+k*(cardH+22):375,summaryY=capY+capH+30,H=mobile?summaryY+200:1200;
  const parts=[],issues=[],boxes=[],foreground=[],artBounds=[],overflowFields=[],prefix='pm-world-',platforms=Object.fromEntries(data.journey.map(j=>[j.id,'sculptural_bowl'])),characterSide='left',titleCenter=W/2,logoGap=20;
  const id=s=>prefix+s,url=s=>'url(#'+id(s)+')';
  const zone=(key,x,y,width,height,kind)=>{if(key)foreground.push({id:key,x,y,width,height,kind});return key?`data-foreground="${esc(key)}"`:''};
  function rect(x,y,w,h,r,fill,stroke='#ffffffdd',filter='shadow'){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2.5"${filter?` filter="${url(filter)}"`:''}/>`}
  function text(s,x,y,size=26,weight=500,color=ink){return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" data-font="${fontFor(weight)}" font-family="${fonts[fontFor(weight)].family}" font-kerning="none" font-size="${size}" font-weight="600" fill="${color}">${esc(s)}</text>`}
  function fit(s,x,y,w,h,size=26,weight=500,maxLines=3,key='',color=ink){
-  let f=size,rows=[];const min=key.includes(':date')?(mobile?23:18):mobile?23:key==='title'?48:key.includes(':method')?20:key==='signature'?19:22;
+  let f=size,rows=[];const min=key.includes(':date')?(mobile?23:18):mobile?23:key==='title'?48:key.includes(':method')?18:key==='signature'?19:22;
   for(;f>=min;f--){measure.font=`600 ${f}px ${fonts[fontFor(weight)].family}`;rows=[];let line='';for(const word of String(s).split(/\s+/)){const next=line?line+' '+word:word;if(line&&measure.measureText(next).width>w){rows.push(line);line=word}else line=next}if(line)rows.push(line);if(rows.length<=maxLines&&rows.length*f*1.18<=h&&rows.every(r=>measure.measureText(r).width<=w))break}
   if(f<min){issues.push('Text exceeds its reserved area: '+key);overflowFields.push(key);return ''}
   boxes.push({text:String(s),x:x-w/2,y:y-h/2,width:w,height:h,size:f,lines:rows.length,paintedHeight:rows.length*f*1.18});
@@ -52,22 +52,22 @@ function build(data,mobile=false,variant){
   return `<g ${zone(key,x,y,w,h,'illustration')} data-platform="sculptural_bowl" transform="translate(${x} ${y}) scale(${w/240} ${h/135})"><defs><linearGradient id="${top}" x2=".8" y2="1"><stop stop-color="#fff"/><stop offset=".6" stop-color="${tint(c,.58)}"/><stop offset="1" stop-color="${c}"/></linearGradient><linearGradient id="${side}" x2=".1" y2="1"><stop stop-color="${tint(c,.5)}"/><stop offset=".6" stop-color="${c}"/><stop offset="1" stop-color="${tint(c,.15)}"/></linearGradient></defs><ellipse cx="120" cy="121" rx="91" ry="9" fill="${c}" opacity=".2"/><g filter="${url('platformShadow')}"><path d="M12 36C28 88 72 97 99 101Q120 106 141 101C168 97 212 88 228 36Z" fill="url(#${side})" stroke="#ffffffb0" stroke-width="2"/><path d="M35 52Q120 90 205 52" fill="none" stroke="#ffffff5c" stroke-width="2"/><ellipse cx="120" cy="36" rx="108" ry="28" fill="url(#${top})" stroke="#fff" stroke-width="3"/><path d="m38 33 29-26 25 26m-15 0 28-38 34 38m-12 0 25-27 28 27" fill="${tint(c,.65)}" stroke="#ffffffc0" stroke-width="1.5"/><ellipse cx="122" cy="43" rx="88" ry="12" fill="#ffffff35"/></g></g>`;
  }
  function role(j,i){
-  const x=mobile?470:80+unit*(i+.5),row=journeyY+30+i*300,cy=mobile?row+20:220,labelY=mobile?row+55:318,iconSize=mobile?80:60;
-  let out='<g data-component="CareerJourneyIsland">'+icon(variant?.icon_overrides?.[j.id]||j.icon,mobile?78:x-30,cy,iconSize,j.id+':icon');
-  out+=fit(j.label,x,labelY,mobile?410:unit-30,mobile?76:62,mobile?35:n===5?29:34,800,2,j.id+':label');
-  const blocks=j.highlights?.length?j.highlights.map(h=>h.label):[j.description];
-  blocks.forEach((s,b)=>out+=fit(s,x,mobile?row+125+b*70:(hasDates?398:382)+b*58,mobile?410:unit-28,mobile?64:54,mobile?29:n===5?24:28,500,2,j.id+':'+(j.highlights?.length?'highlight'+b:'description'),secondary));
-  if(j.date_label)out+=fit(j.date_label,x,mobile?row+260:360,mobile?400:unit-32,mobile?36:22,mobile?26:20,500,1,j.id+':date',secondary);
-  const iw=mobile?165:Math.min(260,unit-38),ix=mobile?48:x-iw/2,iy=mobile?row+140:hasDates?490:470,ih=mobile?125:115;
-  out+=platform(ix,iy,iw,ih,i,j.id+':island');
-  // A prop symbol reflects the actual role; it is decoration, never a new career claim.
-  out+=icon(j.icon,ix+iw*.54,iy+ih*.04,mobile?42:48);
+  const x=mobile?470:80+unit*(i+.5),row=journeyY+30+i*300,sideIcon=!mobile&&n>=4;
+  const labelY=mobile?row+55:hasDates?318:330,iconSize=mobile?80:sideIcon?48:52,iconX=mobile?78:sideIcon?x-unit/2+20:x-iconSize/2,iconY=mobile?row+20:sideIcon?labelY-24:hasDates?230:240,labelX=sideIcon?x+26:x,labelW=mobile?410:sideIcon?unit-100:unit-30;
+  let out='<g data-component="CareerJourneyIsland">'+icon(variant?.icon_overrides?.[j.id]||j.icon,iconX,iconY,iconSize,j.id+':icon');
+  out+=fit(j.label,labelX,labelY,labelW,mobile?76:hasDates?58:60,mobile?35:n>=4?29:34,800,2,j.id+':label');
+  const blocks=j.highlights?.length?j.highlights.map(h=>h.label):[j.description],width=mobile?410:unit-28,size=mobile?29:n===5?24:28;
+  let top=mobile?row+95:hasDates?376:374;
+  blocks.forEach((s,b)=>{measure.font=`600 ${size}px ${fonts.body.family}`;const height=mobile?64:measure.measureText(s).width<=width?36:54;out+=fit(s,x,top+height/2,width,height,size,500,2,j.id+':'+(j.highlights?.length?'highlight'+b:'description'),secondary);top+=height+(mobile?6:6)});
+  if(j.date_label)out+=fit(j.date_label,x,mobile?row+260:359,mobile?400:unit-32,mobile?36:22,mobile?26:18,500,1,j.id+':date',secondary);
+  const iw=mobile?165:Math.min(260,unit-38),ix=mobile?48:x-iw/2,iy=mobile?row+140:502,ih=mobile?125:100;
+  out+=platform(ix,iy,iw,ih,i,j.id+':island');out+=icon(j.icon,ix+iw*.54,iy+ih*.04,mobile?42:48);
   return out+'</g>';
  }
  function shapedConnections(){
   const target={x:W/2,y:bridgeY+6},anchors=[];let out='<g data-component="JourneyToDNA" fill="none">';
   data.journey.forEach((j,i)=>{
-   const x=mobile?130:80+unit*(i+.5),y=mobile?journeyY+30+i*300+255:hasDates?576:556,tx=mobile?target.x:target.x+(i-(n-1)/2)*17;
+   const x=mobile?130:80+unit*(i+.5),y=mobile?journeyY+30+i*300+255:581,tx=mobile?target.x:target.x+(i-(n-1)/2)*17;
    const d=mobile?`M${x} ${y}C25 ${y+40} 30 ${bridgeY-30} ${tx} ${target.y}`:`M${x} ${y}C${x} ${y+115} ${tx} ${bridgeY-125} ${tx} ${target.y}`;
    anchors.push({id:j.id,start:{x,y},end:{x:tx,y:target.y}});const c=islandColors[i%islandColors.length];
    out+=`<path d="${d}" stroke="${c}" stroke-width="26" opacity=".3" filter="${url('glow')}"/><path d="${d}" stroke="${c}" stroke-width="19" opacity=".8"/><path d="${d}" stroke="#fff9d8" stroke-width="3"/>`;
@@ -78,10 +78,10 @@ function build(data,mobile=false,variant){
  function capability(s,i){
   const mascot=!mobile&&variant?.mascot_visible!==false,gap=14,available=mobile?680:mascot?1215:1480,w=(available-gap*(mobile?0:k-1))/(mobile?1:k),x=mobile?40:(mascot?325:60)+i*(w+gap),y=mobile?capY+20+i*(cardH+22):capY+12;
   let out='<g data-component="CapabilityCard">'+rect(x,y,w,cardH,46,url('card'+i),'#fff','cardShadow');
-  out+=icon(variant?.icon_overrides?.[s.id]||s.icon,x+w/2-31,y+10,62,s.id+':icon');
-  out+=fit(s.label,x+w/2,y+115,w-30,72,mobile?35:k===4?30:33,800,2,s.id+':label');
-  out+=fit(s.description,x+w/2,y+(mobile?219:205),w-36,mobile?110:100,mobile?31:k===4?25:29,500,4,s.id+':description',secondary);
-  if(s.methods?.length){const my=y+(mobile?284:258),mh=mobile?120:90;out+=rect(x+16,my,w-32,mh,36,'#ffffffbc','#fff');s.methods.forEach((m,z)=>out+=fit(m.label,x+w/2,my+mh/2+(z-(s.methods.length-1)/2)*(mobile?36:28),w-48,mobile?32:26,mobile?24:20,500,1,s.id+':method'+z));}
+  out+=icon(variant?.icon_overrides?.[s.id]||s.icon,x+w/2-28,y+10,56,s.id+':icon');
+  out+=fit(s.label,x+w/2,y+103,w-30,60,mobile?35:k===4?30:33,800,2,s.id+':label');
+  out+=fit(s.description,x+w/2,y+(mobile?219:190),w-36,mobile?110:100,mobile?31:k===4?25:29,500,4,s.id+':description',secondary);
+  if(s.methods?.length){const my=y+(mobile?306:256),mh=mobile?124:92;out+=rect(x+16,my,w-32,mh,36,'#ffffffbc','#fff').replace('<rect ','<rect data-component="EvidenceCapsule" data-for="'+esc(s.id)+'" ');s.methods.forEach((m,z)=>{const count=s.methods.length,step=mobile?36:count===3?26:30,height=count===1?mh-20:mobile?32:count===3?24:28;out+=fit(m.label,x+w/2,my+mh/2+(z-(count-1)/2)*step,w-56,height,mobile?24:count===3?18:20,500,count===1?2:1,s.id+':method'+z)});}
   return out+'</g>';
  }
  const paths=shapedConnections();
@@ -91,26 +91,25 @@ function build(data,mobile=false,variant){
  // Soft edge ribbons have no text and stay behind all interactive/dynamic content.
  parts.push(`<path d="M0 155Q180 65 390 130T${W} 75V0H0Z" fill="#ffffff35"/><path d="M0 ${H-60}Q320 ${H-145} 700 ${H-55}T${W} ${H-95}" fill="none" stroke="#ffffff66" stroke-width="25"/>`);
  parts.push(rect(mobile?28:60,30,mobile?W-56:W-120,mobile?150:128,64,url('panel'),'#fff'));
- const logoX=mobile?48:83,logoSize=mobile?56:86;parts.push(`<image ${zone('brand',logoX,48,logoSize,logoSize,'illustration')} href="${BRAND}" x="${logoX}" y="48" width="${logoSize}" height="${logoSize}"/>`);
- if(!mobile)parts.push('<path d="M188 62v61" stroke="#ba94c0" stroke-width="1.5"/>',text('PM Career',278,84,23,500),text('Studio',250,112,23,500));
- parts.push(fit('My PM Career DNA',mobile?435:W/2,mobile?73:91,mobile?510:690,76,mobile?42:62,800,1,'title'),`<path d="M${mobile?240:560} ${mobile?112:137}Q${W/2} ${mobile?96:116} ${mobile?620:1040} ${mobile?112:137}" fill="none" stroke="${url('swoosh')}" stroke-width="9" stroke-linecap="round"/>`);
- const themeX=mobile?100:1162,themeW=mobile?560:355,themeY=mobile?120:65;parts.push(rect(themeX,themeY,themeW,mobile?45:65,32,url('summary'),'#fff'),fit(data.career_signature,themeX+themeW/2,themeY+(mobile?22.5:32.5),themeW-30,mobile?36:54,mobile?25:23,500,2,'signature'));
+ const logoX=mobile?48:83,logoSize=mobile?48:86,logoY=mobile?44:48;parts.push(`<image ${zone('brand',logoX,logoY,logoSize,logoSize,'illustration')} href="${BRAND}" x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}"/>`);
+ const brandX=mobile?190:268,brandY=mobile?66:94;parts.push('<g data-component="BrandWatermark" opacity=".68" '+zone('brand-label',brandX-88,brandY-14,176,28,'text')+'>'+text('PM Career Studio',brandX,brandY,18,500,'#8b7b99')+'</g>');
+ parts.push(fit('My PM Career DNA',W/2,mobile?130:91,mobile?660:690,mobile?62:76,mobile?42:62,800,1,'title'),`<path d="M${mobile?210:560} ${mobile?166:137}Q${W/2} ${mobile?150:116} ${mobile?550:1040} ${mobile?166:137}" fill="none" stroke="${url('swoosh')}" stroke-width="9" stroke-linecap="round"/>`);
  parts.push(rect(28,journeyY,W-56,journeyH,58,url('panel'),'#fff'),paths.svg,pill('My PM Journey',mobile?46:76,journeyY-24,mobile?345:350));
  data.journey.forEach((j,i)=>parts.push(role(j,i)));
  if(!mobile&&variant?.decorations!=='none'){
   parts.push(decor('garden',35,journeyY+journeyH-105,100,95),decor('garden',W-135,journeyY+journeyH-105,100,95));
   // UI roadmap and the relevant capability icon are reusable semantic ornaments.
-  parts.push(icon('roadmap',48,journeyY+220,95),icon(data.strengths[k-1].icon,W-145,journeyY+220,100));
+  parts.push(icon('roadmap',38,journeyY+245,48,'journey-decoration-left'),icon(data.strengths[k-1].icon,W-86,journeyY+245,48,'journey-decoration-right'));
  }
  parts.push(pill('Shaped My PM DNA',W/2-250,bridgeY,500,66),spark(W/2-272,bridgeY+33,13),spark(W/2+272,bridgeY+33,13));
  parts.push(rect(36,capY,W-72,capH,58,url('panel'),'#fff'),character());data.strengths.forEach((s,i)=>parts.push(capability(s,i)));
  const sy=summaryY,sh=mobile?155:72,sx=mobile?35:220,sw=mobile?W-70:W-440;
  parts.push('<g data-component="CareerDNASummary">',rect(sx,sy,sw,sh,sh/2,url('summary'),'#fff'),spark(sx+36,sy+sh/2),spark(sx+sw-36,sy+sh/2),fit(data.superpower,W/2,sy+sh/2,sw-120,mobile?126:58,mobile?31:29,800,mobile?4:2,'superpower'),'</g>');
- if(!mobile&&variant?.decorations!=='none')parts.push(icon(data.strengths[0].icon,65,summaryY-18,105),icon(data.strengths[k-1].icon,W-170,summaryY-18,105));
+ if(!mobile&&variant?.decorations!=='none')parts.push(icon(data.strengths[0].icon,65,summaryY-26,105),icon(data.strengths[k-1].icon,W-170,summaryY-26,105));
  parts.push('</svg>');
  const collisions=[];for(let i=0;i<foreground.length;i++)for(let j=i+1;j<foreground.length;j++){const a=foreground[i],b=foreground[j];if(Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>.5&&Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)>.5)collisions.push([a.id,b.id])}
  if(collisions.length)issues.push('Foreground regions overlap.');const clipped=artBounds.filter(b=>b.x<12||b.y<12||b.x+b.width>W-12||b.y+b.height>H-12);if(clipped.length)issues.push('An illustration is outside safe canvas margins.');if(!fontsLoaded)issues.push('Rounded fonts are not ready.');
- return {svg:parts.join(''),metrics:{ok:!issues.length,issues,overflowFields,boxes,foreground,collisions,width:W,height:H,theme_id:theme.id,avatar_id:'pm_avatar_'+String(avatar+1).padStart(2,'0'),oneResult:true,platforms,pathway:variant?.pathway_id||'glow',pathAnchors:paths.anchors,hub:{x:W/2,y:bridgeY,width:500,height:66},summary:{y:summaryY,cardBottom:capY+capH},header:{title_center_x:W/2,logo_gap:logoGap,theme_in_header:true},artBounds,clipped,character_side:characterSide,fontsLoaded,headingFont:fonts.heading.family,bodyFont:fonts.body.family}};
+ return {svg:parts.join(''),metrics:{ok:!issues.length,issues,overflowFields,boxes,foreground,collisions,width:W,height:H,theme_id:theme.id,avatar_id:'pm_avatar_'+String(avatar+1).padStart(2,'0'),oneResult:true,platforms,pathway:variant?.pathway_id||'glow',pathAnchors:paths.anchors,hub:{x:W/2,y:bridgeY,width:500,height:66},summary:{y:summaryY,cardBottom:capY+capH},header:{title_center_x:W/2,logo_gap:logoGap,theme_in_header:false},artBounds,clipped,character_side:characterSide,fontsLoaded,headingFont:fonts.heading.family,bodyFont:fonts.body.family}};
 }
 window.buildDNAScene=build;
 let current=null;window.clearDNAMap=()=>{current=null};const query=matchMedia('(max-width:1000px)');

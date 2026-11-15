@@ -42,8 +42,7 @@ class ApprovedBrowser(unittest.TestCase):
  def test_homepage_privacy_fonts_and_no_duplicate_cta(self):
   page,context=self.page();self.assertEqual(page.locator('#begin').count(),0);self.assertTrue(page.locator('#upload').is_visible());self.assertTrue(page.locator('#generate').is_visible());self.assertFalse(page.locator('#privacy').evaluate('(e)=>e.open'))
   self.assertEqual(page.locator('#privacy > p').count(),1);self.assertEqual(page.locator('#clarification').count(),0)
-  page.locator('#privacy > summary').click();page.wait_for_function('document.querySelector("#privacy > summary").getAttribute("aria-expanded")==="true"');self.assertEqual(page.locator('#privacy > summary').get_attribute('aria-expanded'),'true');page.locator('#privacy-technical > summary').click()
-  pbox=page.locator('#privacy > summary').bounding_box();tbox=page.locator('#privacy-technical > summary').bounding_box();self.assertAlmostEqual(pbox['x']+pbox['width'],tbox['x']+tbox['width'],delta=1)
+  page.locator('#privacy > summary').click();page.wait_for_function('document.querySelector("#privacy > summary").getAttribute("aria-expanded")==="true"');self.assertEqual(page.locator('#privacy > summary').get_attribute('aria-expanded'),'true');self.assertEqual(page.locator('#privacy-technical').count(),0)
   self.assertTrue(page.evaluate('document.fonts.check("600 32px PMDNAHeading")&&document.fonts.check("600 16px PMDNABody")&&!document.documentElement.classList.contains("fonts-loading")'));context.close()
  def test_approved_geometry_two_to_five_stages_one_to_four_cards(self):
   page,context=self.page()

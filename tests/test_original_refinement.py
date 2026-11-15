@@ -58,7 +58,7 @@ class OriginalBrowser(unittest.TestCase):
   page,context=self.ready()
   for mobile in [False,True]:
    for count in [1,2,3,4]:
-    data=make_map(count,count);metrics=page.evaluate('([d,m])=>buildDNAScene(d,m,{platform_overrides:{j1:"garden",j2:"crystal",j3:"steps"}}).metrics',[data,mobile]);self.assertTrue(metrics['ok'],metrics['issues']);self.assertEqual(len(set(metrics['platforms'].values())),1);self.assertTrue(metrics['header']['theme_in_header']);self.assertEqual(metrics['collisions'],[])
+    data=make_map(count,count);metrics=page.evaluate('([d,m])=>buildDNAScene(d,m,{platform_overrides:{j1:"garden",j2:"crystal",j3:"steps"}}).metrics',[data,mobile]);self.assertTrue(metrics['ok'],metrics['issues']);self.assertEqual(len(set(metrics['platforms'].values())),1);self.assertFalse(metrics['header']['theme_in_header']);self.assertEqual(metrics['collisions'],[])
   self.assertGreaterEqual(page.locator('[data-component="JourneyToDNA"] path').count(),6);self.assertEqual(page.locator('[data-component="CareerDNASummary"]').count(),1);page.locator('#map-visual').screenshot(path=str(ART/'approved-composition.png'));context.close()
 
 class ModelAndScopeHTTP(unittest.TestCase):
