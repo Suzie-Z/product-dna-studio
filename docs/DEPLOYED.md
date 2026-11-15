@@ -1,3 +1,11 @@
+# Current targeted update — 15 November 2026 (Sydney)
+
+Runtime `ec3e8323138b8a91361101d26e99c90bbd2de61c` is live. Frontend deploy `dep-dbsmeh61egvs73e9eadg`; API deploy `dep-dbsme3jbc2fs73bvo1n0`. Same existing services, URLs, models, quotas and persistent aggregate counters. Published UI checks passed at 1440/768/390/320 pixels; 139 regression tests and 7 focused checks passed locally. [Targeted delivery record](ui-clarity/DELIVERY.md).
+
+Earlier release details follow.
+
+---
+
 # Current published runtime — 15 November 2026 (Sydney)
 
 Runtime commit: `b6fed7be59718acc4ddefe56d597ff4f29cb1109`.

@@ -1,3 +1,11 @@
+# Current update: targeted UI and content clarity
+
+Published **15 November 2026 (Sydney)**. [Open the updated website](https://product-dna-studio-preview.onrender.com/?v=ec3e832). This keeps the approved original design and simplifies Privacy & Data, the map header and Refine loading. Journey selection emphasizes evidenced PM depth; illustrations and capability evidence have clearer spacing. Models, CV upload, data schema and PNG download remain unchanged. **139 regression tests plus 7 focused checks passed.** [Changed files, screenshots, verification and limits](docs/ui-clarity/DELIVERY.md).
+
+Previous release notes follow.
+
+---
+
 # Current release: Approved Career DNA design and one-step Refine
 
 Published **15 November 2026 (Sydney)**. [Open the website](https://product-dna-studio-preview.onrender.com/?v=b6fed7b). The current original app uses the approved 4:3 dynamic map, complete explorer illustration, sculptural islands and computed convergence ribbons. Refine is one input/one Apply, with atomic scoped replacements and inline errors rather than questions. Critical WOFF2 fonts load before paint; the redundant homepage CTA is removed.

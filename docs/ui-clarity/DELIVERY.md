@@ -33,3 +33,7 @@ Recoverable checkpoint: `checkpoint-before-targeted-clarity-d66eec7`. This is an
 The review bundle contains actual browser screenshots: same-data map before/after, simplified header, journey, capability cards, privacy desktop/mobile, Refine loading, preserved-input error state and actual downloaded PNG. Synthetic evidence is used only for deterministic QA; it is not embedded in runtime output. Existing rounded 3D assets were reused; no illustration generation was performed.
 
 No known functional blocker remains. Experience prioritization is model-guided rather than a deterministic CV ranking engine; the regression checks ensure the instructions reach both stages and preserve grounding/source structure, not a fresh paid-model quality benchmark across real CVs. Very long copy retains the existing semantic fitting/failure safeguards rather than being cut off.
+
+## Published verification
+
+Runtime `ec3e8323138b8a91361101d26e99c90bbd2de61c` is live on the existing Render services. Backend deploy: `dep-dbsme3jbc2fs73bvo1n0`; frontend deploy: `dep-dbsmeh61egvs73e9eadg`. The published bundle passed checks at 1440, 768, 390 and 320 pixels: no horizontal overflow, unchanged one-line hero statement, a single privacy paragraph, no visible theme pill, retained theme data and exactly one Refine loading message. The configured available Refine model remains `gpt-6-sol`; counters remain persistent. Live visual checks used synthetic map fixtures and intercepted pending refinement requests, creating no public synthetic generations or downloads.
